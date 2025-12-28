@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>👨‍👩‍👧‍👦 Parent Dashboard</title>
+    
+    <!-- PWA Setup -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cub Stars">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Cub%20Stars%20-%20Parent%22%2C%22short_name%22%3A%22Parent%22%2C%22start_url%22%3A%22.%2Fparent_app.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23667eea%22%2C%22theme_color%22%3A%22%23667eea%22%2C%22orientation%22%3A%22portrait%22%7D">
+    
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100' rx='20'/><text y='65' x='50' text-anchor='middle' font-size='40'>👨‍👩‍👧‍👦</text></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #6C5CE7; --success: #00B894; --warning: #FDCB6E; --danger: #E17055; --dark: #2D3436; --light: #DFE6E9; --white: #FFFFFF; }
+        html, body { height: 100%; overflow-x: hidden; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            min-height: -webkit-fill-available;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: var(--white); border-radius: 20px; padding: 25px 30px; margin-bottom: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+        .header h1 { font-size: 1.8rem; color: var(--dark); }
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 50px; font-weight: 500; font-size: 0.9rem; background: #D5F4E6; color: var(--success); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 25px; border: none; border-radius: 12px; font-family: inherit; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.3); color: white; transition: all 0.3s ease; }
+        .tab-btn:hover { background: rgba(255,255,255,0.5); }
+        .tab-btn.active { background: white; color: var(--primary); }
+        .notification-badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 50px; font-size: 0.75rem; margin-left: 5px; }
+        .card { background: var(--white); border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .card-title { font-size: 1.3rem; color: var(--dark); margin-bottom: 20px; }
+        .child-selector { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .child-card { background: white; border-radius: 15px; padding: 20px 30px; cursor: pointer; border: 3px solid transparent; text-align: center; min-width: 150px; transition: all 0.3s ease; }
+        .child-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .child-card.active { border-color: var(--primary); background: linear-gradient(135deg, #F8F9FF, #EEF0FF); }
+        .child-card.boy { border-color: #E74C3C; background: linear-gradient(135deg, #FFEFEF, #FFE5E5); }
+        .child-card.girl { border-color: #FF69B4; background: linear-gradient(135deg, #FFF0F5, #FFE4EC); }
+        .child-avatar { font-size: 2.5rem; margin-bottom: 10px; }
+        .child-name { font-weight: 600; color: var(--dark); }
+        .child-stars { color: #F39C12; font-weight: 500; margin-top: 5px; }
+        .approval-list { display: grid; gap: 15px; }
+        .approval-item { display: flex; align-items: center; gap: 15px; padding: 20px; background: linear-gradient(135deg, #FFF9E6, #FFFBF0); border-radius: 15px; border-left: 5px solid var(--warning); flex-wrap: wrap; }
+        .approval-avatar { font-size: 2rem; }
+        .approval-info { flex: 1; min-width: 200px; }
+        .approval-child { font-weight: 600; color: var(--dark); }
+        .approval-task { color: #666; margin-top: 3px; }
+        .approval-stars { color: #F39C12; font-weight: 600; }
+        .approval-time { font-size: 0.8rem; color: #999; margin-top: 5px; }
+        .approval-actions { display: flex; gap: 10px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-small { padding: 8px 15px; font-size: 0.85rem; }
+        .item-grid { display: grid; gap: 15px; }
+        .item-row { display: flex; align-items: center; gap: 15px; padding: 15px 20px; background: #F8F9FA; border-radius: 12px; flex-wrap: wrap; }
+        .item-icon { font-size: 1.5rem; }
+        .item-info { flex: 1; min-width: 150px; }
+        .item-name { font-weight: 600; color: var(--dark); }
+        .item-meta { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .item-value { font-weight: 700; color: #F39C12; }
+        .delete-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.4; }
+        .delete-btn:hover { opacity: 1; }
+        .form-section { background: #F8F9FA; border-radius: 15px; padding: 20px; margin-top: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-weight: 500; color: var(--dark); font-size: 0.9rem; }
+        .form-group input, .form-group select { padding: 12px 15px; border: 2px solid var(--light); border-radius: 10px; font-family: inherit; font-size: 1rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state .emoji { font-size: 4rem; margin-bottom: 15px; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .refresh-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .refresh-btn.loading { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--dark); color: white; padding: 15px 30px; border-radius: 50px; font-weight: 500; opacity: 0; transition: all 0.3s ease; z-index: 1000; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .stars-control { display: flex; gap: 10px; align-items: center; margin-top: 15px; padding: 15px; background: #E8F5E9; border-radius: 10px; flex-wrap: wrap; }
+        .stars-control input { width: 80px; padding: 8px; border: 2px solid #81C784; border-radius: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <h1>👨‍👩‍👧‍👦 Parent Dashboard</h1>
+                <div class="status-badge">✓ Connected</div>
+            </div>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('approvals', this)">✅ Approvals <span class="notification-badge" id="approvalCount">0</span></button>
+            <button class="tab-btn" onclick="switchTab('manage', this)">📋 Manage Tasks</button>
+            <button class="tab-btn" onclick="switchTab('rewards', this)">🎁 Manage Rewards</button>
+            <button class="tab-btn" onclick="switchTab('stars', this)">⭐ Manage Stars</button>
+            <button class="refresh-btn" onclick="loadData()" title="Refresh">🔄</button>
+        </div>
+        <div class="child-selector" id="childSelector"></div>
+        <div class="tab-panel active" id="approvalsPanel">
+            <div class="card">
+                <h2 class="card-title">📋 Pending Task Approvals</h2>
+                <div class="approval-list" id="approvalList"><div class="empty-state"><div class="emoji">✨</div><p>No pending task approvals!</p></div></div>
+            </div>
+            <div class="card">
+                <h2 class="card-title">🎁 Pending Reward Claims</h2>
+                <div class="approval-list" id="rewardClaimList"><div class="empty-state"><div class="emoji">🎁</div><p>No pending reward claims!</p></div></div>
+            </div>
+        </div>
+        <div class="tab-panel" id="managePanel">
+            <div class="card">
+                <h2 class="card-title">📋 Tasks for <span id="taskChildName">Select Child</span></h2>
+                <div class="form-section">
+                    <h4 style="margin-bottom: 15px;">➕ Add New Task</h4>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Task Name</label><input type="text" id="newTaskName" placeholder="e.g., Make the bed"></div>
+                        <div class="form-group"><label>Stars ⭐</label><select id="newTaskStars"><option value="1">1 Star</option><option value="2">2 Stars</option><option value="3" selected>3 Stars</option><option value="5">5 Stars</option><option value="10">10 Stars</option></select></div>
+                        <div class="form-group"><label>Category</label><select id="newTaskCategory"><option value="🏠">🏠 Home</option><option value="📚">📚 Learning</option><option value="💪">💪 Health</option><option value="🤝">🤝 Kindness</option><option value="🎨">🎨 Creative</option></select></div>
+                        <div class="form-group" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="addTask()">Add Task</button></div>
+                    </div>
+                </div>
+                <div class="item-grid" id="taskList" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+        <div class="tab-panel" id="rewardsPanel">
+            <div class="card">
+                <h2 class="card-title">🎁 Rewards for <span id="rewardChildName">Select Child</span></h2>
+                <div class="form-section">
+                    <h4 style="margin-bottom: 15px;">➕ Add New Reward</h4>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Reward Name</label><input type="text" id="newRewardName" placeholder="e.g., Ice cream treat"></div>
+                        <div class="form-group"><label>Cost ⭐</label><select id="newRewardCost"><option value="10">10 Stars</option><option value="20">20 Stars</option><option value="30" selected>30 Stars</option><option value="50">50 Stars</option><option value="100">100 Stars</option></select></div>
+                        <div class="form-group"><label>Icon</label><select id="newRewardIcon"><option value="🍦">🍦 Ice Cream</option><option value="🎮">🎮 Game Time</option><option value="📺">📺 TV Time</option><option value="🎬">🎬 Movie</option><option value="🛍️">🛍️ Shopping</option><option value="🎢">🎢 Adventure</option><option value="🧸">🧸 Toy</option><option value="📱">📱 Screen Time</option></select></div>
+                        <div class="form-group" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="addReward()">Add Reward</button></div>
+                    </div>
+                </div>
+                <div class="item-grid" id="rewardList" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+        <div class="tab-panel" id="starsPanel">
+            <div class="card">
+                <h2 class="card-title">⭐ Manage Stars for <span id="starsChildName">Select Child</span></h2>
+                <p style="color: #666; margin-bottom: 15px;">Add bonus stars or remove stars as needed.</p>
+                <div class="stars-control">
+                    <input type="number" id="starsAmount" value="5" min="1" max="100">
+                    <button class="btn btn-success" onclick="addStars()">➕ Add Stars</button>
+                    <button class="btn btn-danger" onclick="removeStars()">➖ Remove Stars</button>
+                </div>
+                <div id="starsHistory" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <script>
+        // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
+        var API_URL = '{{SCRIPT_URL}}';
+        // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
+        
+        var data = { children: [] };
+        var selectedChildId = null;
+
+        function apiCall(action, params) {
+            params = params || {};
+            return new Promise(function(resolve, reject) {
+                var url = new URL(API_URL);
+                url.searchParams.append('action', action);
+                for (var key in params) {
+                    var value = params[key];
+                    url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
+                }
+                fetch(url.toString()).then(function(r) { return r.json(); }).then(resolve).catch(reject);
+            });
+        }
+
+        function loadData() {
+            document.querySelector('.refresh-btn').classList.add('loading');
+            apiCall('getData').then(function(result) {
+                data = result;
+                renderAll();
+                showToast('Data loaded!', 'success');
+            }).catch(function(error) {
+                showToast('Error loading data', 'error');
+            }).finally(function() {
+                document.querySelector('.refresh-btn').classList.remove('loading');
+            });
+        }
+
+        function renderAll() {
+            renderChildSelector();
+            renderApprovals();
+            renderTasks();
+            renderRewards();
+            renderStars();
+        }
+
+        function renderChildSelector() {
+            var container = document.getElementById('childSelector');
+            if (!selectedChildId && data.children.length > 0) selectedChildId = data.children[0].id;
+            var html = '';
+            data.children.forEach(function(child) {
+                var isActive = child.id === selectedChildId ? 'active' : '';
+                html += '<div class="child-card ' + child.type + ' ' + isActive + '" onclick="selectChild(\'' + child.id + '\')">' +
+                    '<div class="child-avatar">' + child.avatar + '</div>' +
+                    '<div class="child-name">' + child.name + '</div>' +
+                    '<div class="child-stars">⭐ ' + child.stars + ' Stars</div></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function selectChild(childId) {
+            selectedChildId = childId;
+            renderAll();
+        }
+
+        function renderApprovals() {
+            var container = document.getElementById('approvalList');
+            var rewardContainer = document.getElementById('rewardClaimList');
+            var allApprovals = [];
+            var allRewardClaims = [];
+            
+            data.children.forEach(function(child) {
+                if (child.pendingApprovals) {
+                    child.pendingApprovals.forEach(function(a) {
+                        allApprovals.push({id: a.id, taskName: a.taskName, stars: a.stars, submittedAt: a.submittedAt, childId: child.id, childName: child.name, childAvatar: child.avatar});
+                    });
+                }
+                if (child.pendingRewardClaims) {
+                    child.pendingRewardClaims.forEach(function(c) {
+                        allRewardClaims.push({id: c.id, rewardName: c.rewardName, rewardIcon: c.rewardIcon, cost: c.cost, submittedAt: c.submittedAt, childId: child.id, childName: child.name, childAvatar: child.avatar, childStars: child.stars});
+                    });
+                }
+            });
+            
+            document.getElementById('approvalCount').textContent = allApprovals.length + allRewardClaims.length;
+            
+            if (allApprovals.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">✨</div><p>No pending tasks!</p></div>';
+            } else {
+                var html = '';
+                allApprovals.forEach(function(a) {
+                    html += '<div class="approval-item">' +
+                        '<div class="approval-avatar">' + a.childAvatar + '</div>' +
+                        '<div class="approval-info">' +
+                        '<div class="approval-child">' + a.childName + '</div>' +
+                        '<div class="approval-task">Completed: ' + a.taskName + '</div>' +
+                        '<div class="approval-stars">⭐ +' + a.stars + ' stars</div>' +
+                        '<div class="approval-time">' + formatTime(a.submittedAt) + '</div></div>' +
+                        '<div class="approval-actions">' +
+                        '<button class="btn btn-success btn-small" onclick="approveTask(\'' + a.childId + '\',' + a.id + ')">✓ Approve</button>' +
+                        '<button class="btn btn-danger btn-small" onclick="rejectTask(\'' + a.childId + '\',' + a.id + ')">✗ Reject</button></div></div>';
+                });
+                container.innerHTML = html;
+            }
+            
+            if (allRewardClaims.length === 0) {
+                rewardContainer.innerHTML = '<div class="empty-state"><div class="emoji">🎁</div><p>No pending claims!</p></div>';
+            } else {
+                var html = '';
+                allRewardClaims.forEach(function(c) {
+                    html += '<div class="approval-item" style="border-left-color:#9B59B6;background:linear-gradient(135deg,#F5EEF8,#FDFBFE);">' +
+                        '<div class="approval-avatar">' + c.rewardIcon + '</div>' +
+                        '<div class="approval-info">' +
+                        '<div class="approval-child">' + c.childName + ' ' + c.childAvatar + '</div>' +
+                        '<div class="approval-task">Wants: <strong>' + c.rewardName + '</strong></div>' +
+                        '<div class="approval-stars" style="color:#E67E22;">⭐ -' + c.cost + ' stars (has ' + c.childStars + ')</div>' +
+                        '<div class="approval-time">' + formatTime(c.submittedAt) + '</div></div>' +
+                        '<div class="approval-actions">' +
+                        '<button class="btn btn-success btn-small" onclick="approveRewardClaim(\'' + c.childId + '\',' + c.id + ')">✓ Allow</button>' +
+                        '<button class="btn btn-danger btn-small" onclick="rejectRewardClaim(\'' + c.childId + '\',' + c.id + ')">✗ Deny</button></div></div>';
+                });
+                rewardContainer.innerHTML = html;
+            }
+        }
+
+        function renderTasks() {
+            var child = data.children.find(function(c) { return c.id === selectedChildId; });
+            document.getElementById('taskChildName').textContent = child ? child.name : 'Select Child';
+            var container = document.getElementById('taskList');
+            if (!child || !child.tasks || child.tasks.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">📋</div><p>No tasks yet.</p></div>';
+                return;
+            }
+            var html = '';
+            child.tasks.forEach(function(t) {
+                html += '<div class="item-row">' +
+                    '<div class="item-icon">' + t.category + '</div>' +
+                    '<div class="item-info"><div class="item-name">' + t.name + '</div>' +
+                    '<div class="item-meta">' + (t.completed ? '✅ Completed' : '⏳ Pending') + '</div></div>' +
+                    '<div class="item-value">⭐ ' + t.stars + '</div>' +
+                    (t.completed ? '<button class="btn btn-small" style="background:#FFC107;color:#333;" onclick="resetTask(' + t.id + ')">🔄 Reset</button>' : '') +
+                    '<button class="delete-btn" onclick="deleteTask(' + t.id + ')">🗑️</button></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function renderRewards() {
+            var child = data.children.find(function(c) { return c.id === selectedChildId; });
+            document.getElementById('rewardChildName').textContent = child ? child.name : 'Select Child';
+            var container = document.getElementById('rewardList');
+            if (!child || !child.rewards || child.rewards.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">🎁</div><p>No rewards yet.</p></div>';
+                return;
+            }
+            var html = '';
+            child.rewards.forEach(function(r) {
+                html += '<div class="item-row">' +
+                    '<div class="item-icon">' + r.icon + '</div>' +
+                    '<div class="item-info"><div class="item-name">' + r.name + '</div></div>' +
+                    '<div class="item-value">⭐ ' + r.cost + '</div>' +
+                    '<button class="delete-btn" onclick="deleteReward(' + r.id + ')">🗑️</button></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function renderStars() {
+            var child = data.children.find(function(c) { return c.id === selectedChildId; });
+            document.getElementById('starsChildName').textContent = child ? child.name + ' (Current: ' + child.stars + ' ⭐)' : 'Select Child';
+            var container = document.getElementById('starsHistory');
+            if (!child || !child.history || child.history.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">📜</div><p>No history yet.</p></div>';
+                return;
+            }
+            var html = '<h4 style="margin-bottom:10px;">Recent History</h4>';
+            child.history.slice(-10).reverse().forEach(function(h) {
+                var bg = h.type === 'earned' ? '#E8F5E9' : '#FFF3E0';
+                var color = h.type === 'earned' ? '#4CAF50' : '#FF9800';
+                var sign = h.type === 'earned' ? '+' : '-';
+                html += '<div style="padding:10px;background:' + bg + ';border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;">' +
+                    '<span>' + h.action + '</span><span style="color:' + color + ';font-weight:600;">' + sign + h.stars + ' ⭐</span></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function approveTask(childId, approvalId) {
+            apiCall('approveTask', { approve: { childId: childId, approvalId: approvalId } }).then(function() {
+                showToast('Task approved! ⭐', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function rejectTask(childId, approvalId) {
+            apiCall('rejectTask', { reject: { childId: childId, approvalId: approvalId } }).then(function() {
+                showToast('Task rejected', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function approveRewardClaim(childId, claimId) {
+            apiCall('approveRewardClaim', { approve: { childId: childId, claimId: claimId } }).then(function() {
+                showToast('Reward approved! 🎁', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function rejectRewardClaim(childId, claimId) {
+            apiCall('rejectRewardClaim', { reject: { childId: childId, claimId: claimId } }).then(function() {
+                showToast('Reward denied', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function addTask() {
+            var name = document.getElementById('newTaskName').value.trim();
+            if (!name || !selectedChildId) { showToast('Enter task name and select child', 'error'); return; }
+            apiCall('addTask', { task: { childId: selectedChildId, name: name, stars: parseInt(document.getElementById('newTaskStars').value), category: document.getElementById('newTaskCategory').value } }).then(function() {
+                document.getElementById('newTaskName').value = '';
+                showToast('Task added! 📋', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function deleteTask(taskId) {
+            if (!confirm('Delete this task?')) return;
+            apiCall('deleteTask', { task: { childId: selectedChildId, taskId: taskId } }).then(function() {
+                showToast('Task deleted', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function resetTask(taskId) {
+            apiCall('resetTask', { task: { childId: selectedChildId, taskId: taskId } }).then(function() {
+                showToast('Task reset!', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function addReward() {
+            var name = document.getElementById('newRewardName').value.trim();
+            if (!name || !selectedChildId) { showToast('Enter reward name and select child', 'error'); return; }
+            apiCall('addReward', { reward: { childId: selectedChildId, name: name, cost: parseInt(document.getElementById('newRewardCost').value), icon: document.getElementById('newRewardIcon').value } }).then(function() {
+                document.getElementById('newRewardName').value = '';
+                showToast('Reward added! 🎁', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function deleteReward(rewardId) {
+            if (!confirm('Delete this reward?')) return;
+            apiCall('deleteReward', { reward: { childId: selectedChildId, rewardId: rewardId } }).then(function() {
+                showToast('Reward deleted', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function addStars() {
+            var amount = parseInt(document.getElementById('starsAmount').value);
+            if (!amount || !selectedChildId) return;
+            apiCall('addStars', { stars: { childId: selectedChildId, amount: amount } }).then(function() {
+                showToast('Added ' + amount + ' stars! ⭐', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function removeStars() {
+            var amount = parseInt(document.getElementById('starsAmount').value);
+            if (!amount || !selectedChildId) return;
+            apiCall('removeStars', { stars: { childId: selectedChildId, amount: amount } }).then(function() {
+                showToast('Removed ' + amount + ' stars', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById(tabName + 'Panel').classList.add('active');
+        }
+
+        function formatTime(dateString) {
+            if (!dateString) return '';
+            var diff = Date.now() - new Date(dateString).getTime();
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + ' min ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + ' hours ago';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function showToast(message, type) {
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(function() { toast.classList.remove('show'); }, 3000);
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

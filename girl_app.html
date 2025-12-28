@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>🎀 Cub Stars - Amulya</title>
+    
+    <!-- PWA Setup for Fullscreen App Experience -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cub Stars">
+    <meta name="theme-color" content="#FF69B4">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Cub%20Stars%20-%20Amulya%22%2C%22short_name%22%3A%22Cub%20Stars%22%2C%22start_url%22%3A%22.%2Fgirl_app.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23FF69B4%22%2C%22theme_color%22%3A%22%23FF69B4%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%2520100%2520100%27%253E%253Crect%2520fill%3D%27%2523FF69B4%27%2520width%3D%27100%27%2520height%3D%27100%27%2520rx%3D%2720%27%2F%253E%253Ctext%2520y%3D%2765%27%2520x%3D%2750%27%2520text-anchor%3D%27middle%27%2520font-size%3D%2750%27%253E%25F0%259F%258E%2580%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    
+    <!-- App Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23FF69B4' width='100' height='100' rx='20'/><text y='65' x='50' text-anchor='middle' font-size='50'>🎀</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23FF69B4' width='100' height='100' rx='20'/><text y='65' x='50' text-anchor='middle' font-size='50'>🎀</text></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --kitty-pink: #FF69B4; --kitty-light: #FFB6C1; --melody-pink: #FF8FAB; --yellow: #FFEAA7; --white: #FFFFFF; --soft-gray: #666; }
+        html, body { height: 100%; overflow-x: hidden; }
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background: linear-gradient(180deg, #FFE4EC 0%, #FFF0F5 50%, #E8D5E7 100%); 
+            min-height: 100vh; 
+            min-height: -webkit-fill-available;
+            padding: 15px; 
+            padding-top: max(15px, env(safe-area-inset-top)); 
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            padding-left: max(15px, env(safe-area-inset-left));
+            padding-right: max(15px, env(safe-area-inset-right));
+            -webkit-user-select: none; 
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        .kawaii-header { background: linear-gradient(135deg, var(--kitty-pink) 0%, var(--melody-pink) 100%); border-radius: 30px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(255,105,180,0.3); }
+        .kawaii-title { font-family: 'Pacifico', cursive; font-size: 2rem; color: var(--white); text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+        .kawaii-name { font-family: 'Pacifico', cursive; font-size: 1.6rem; color: var(--yellow); text-align: center; margin-top: 10px; }
+        .stars-display { background: rgba(255,255,255,0.25); border-radius: 25px; padding: 20px; margin-top: 20px; text-align: center; }
+        .stars-count { font-size: 3.5rem; font-weight: 700; color: var(--white); }
+        .stars-label { color: var(--white); font-weight: 600; font-size: 1rem; margin-top: 5px; }
+        .progress-section { margin-top: 15px; }
+        .progress-label { display: flex; justify-content: space-between; color: rgba(255,255,255,0.95); font-weight: 600; margin-bottom: 8px; font-size: 0.85rem; }
+        .progress-bar { height: 18px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--yellow), #FFD700); border-radius: 10px; transition: width 0.5s ease; }
+        .section-card { background: var(--white); border-radius: 30px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(255,105,180,0.15); }
+        .section-title { font-family: 'Pacifico', cursive; font-size: 1.5rem; color: var(--kitty-pink); margin-bottom: 20px; }
+        .task-list { display: grid; gap: 15px; }
+        .task-item { display: flex; align-items: center; gap: 15px; padding: 18px; background: linear-gradient(135deg, #FFF0F5, #FFFFFF); border-radius: 20px; border: 3px solid var(--kitty-light); cursor: pointer; transition: all 0.3s ease; }
+        .task-item:hover { transform: translateY(-3px); border-color: var(--kitty-pink); }
+        .task-item.completed { background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-color: #81C784; opacity: 0.8; }
+        .task-item.pending { background: linear-gradient(135deg, #FFF8E1, #FFFDE7); border-color: #FFD54F; }
+        .task-checkbox { width: 50px; height: 50px; border-radius: 50%; border: 4px solid var(--kitty-light); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; background: white; }
+        .task-item.completed .task-checkbox { background: linear-gradient(135deg, #81C784, #66BB6A); border-color: #81C784; color: white; }
+        .task-item.pending .task-checkbox { background: linear-gradient(135deg, #FFD54F, #FFC107); border-color: #FFD54F; }
+        .task-info { flex: 1; }
+        .task-name { font-weight: 700; color: var(--soft-gray); font-size: 1.05rem; }
+        .task-item.completed .task-name { text-decoration: line-through; color: #999; }
+        .task-status { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+        .task-stars { font-weight: 700; color: #FFB300; font-size: 1.1rem; }
+        .rewards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .reward-card { background: linear-gradient(135deg, #FFF0F5, #FFFFFF); border-radius: 25px; padding: 20px 15px; text-align: center; border: 3px solid var(--kitty-light); transition: all 0.3s ease; }
+        .reward-card:hover { transform: translateY(-5px); }
+        .reward-card.affordable { border-color: var(--kitty-pink); background: linear-gradient(135deg, #FFE4EC, #FFF0F5); }
+        .reward-card.pending-claim { border-color: #FFD54F; background: linear-gradient(135deg, #FFF8E1, #FFFDE7); }
+        .reward-icon { font-size: 3rem; margin-bottom: 10px; }
+        .reward-name { font-weight: 700; color: var(--soft-gray); font-size: 0.95rem; margin-bottom: 8px; }
+        .reward-cost { color: #FFB300; font-weight: 700; font-size: 1.1rem; margin-bottom: 12px; }
+        .claim-btn { width: 100%; padding: 12px; border: none; border-radius: 20px; font-family: 'Quicksand', sans-serif; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+        .reward-card:not(.affordable):not(.pending-claim) .claim-btn { background: #E0E0E0; color: #999; }
+        .reward-card.affordable .claim-btn { background: linear-gradient(135deg, var(--kitty-pink), var(--melody-pink)); color: white; }
+        .reward-card.pending-claim .claim-btn { background: #ffd54f; color: #333; }
+        .empty-state { text-align: center; padding: 30px; color: #bbb; }
+        .empty-state .emoji { font-size: 4rem; margin-bottom: 10px; }
+        .celebration-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(255,105,180,0.95), rgba(255,143,171,0.95)); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+        .celebration-overlay.hidden { display: none; }
+        .celebration-content { text-align: center; animation: kawaiiPop 0.5s ease; }
+        @keyframes kawaiiPop { 0% { transform: scale(0); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .celebration-character { font-size: 7rem; margin-bottom: 20px; animation: characterDance 0.6s ease-in-out infinite alternate; }
+        @keyframes characterDance { from { transform: rotate(-5deg) translateY(0); } to { transform: rotate(5deg) translateY(-10px); } }
+        .celebration-title { font-family: 'Pacifico', cursive; font-size: 2.5rem; color: var(--white); margin-bottom: 15px; }
+        .celebration-message { font-size: 1.3rem; color: rgba(255,255,255,0.95); margin-bottom: 10px; font-weight: 600; }
+        .celebration-stars { font-size: 1.8rem; color: var(--yellow); font-weight: 700; margin-bottom: 30px; }
+        .celebration-btn { padding: 18px 50px; border: none; border-radius: 50px; font-family: 'Pacifico', cursive; font-size: 1.4rem; cursor: pointer; background: white; color: var(--kitty-pink); }
+        .heart-confetti { position: fixed; font-size: 1.5rem; top: -50px; animation: heartFall 4s ease-out forwards; z-index: 10000; pointer-events: none; }
+        @keyframes heartFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="kawaii-header">
+            <div class="kawaii-title">🎀 Cub Stars! 🌸</div>
+            <div class="kawaii-name" id="playerName">Loading...</div>
+            <div class="stars-display">
+                <div class="stars-count">⭐ <span id="totalStars">0</span></div>
+                <div class="stars-label">Magic Stars ✨</div>
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>Next Treat: <span id="nextReward">-</span></span>
+                        <span id="progressText">0/0</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="section-card">
+            <h2 class="section-title">📝 Today's Tasks</h2>
+            <div class="task-list" id="taskList"><div class="empty-state"><div class="emoji">🌸</div><p>Loading tasks...</p></div></div>
+        </div>
+        <div class="section-card">
+            <h2 class="section-title">🎁 Sweet Rewards</h2>
+            <div class="rewards-grid" id="rewardsList"><div class="empty-state"><div class="emoji">💝</div></div></div>
+        </div>
+    </div>
+    <div class="celebration-overlay hidden" id="celebration">
+        <div class="celebration-content">
+            <div class="celebration-character" id="celebrationChar">🎀</div>
+            <div class="celebration-title" id="celebrationTitle">Wonderful!</div>
+            <div class="celebration-message" id="celebrationMessage">You did amazing!</div>
+            <div class="celebration-stars" id="celebrationStars">+5 ⭐ Stars!</div>
+            <button class="celebration-btn" onclick="closeCelebration()">Yay! 💖</button>
+        </div>
+    </div>
+    <script>
+        // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
+        var API_URL = '{{SCRIPT_URL}}';
+        // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
+        
+        var CHILD_ID = 'girl1';
+        var childData = null;
+        var pendingCelebrations = [];
+
+        function apiCall(action, params) {
+            params = params || {};
+            return new Promise(function(resolve, reject) {
+                var url = new URL(API_URL);
+                url.searchParams.append('action', action);
+                for (var key in params) {
+                    var value = params[key];
+                    url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
+                }
+                fetch(url.toString()).then(function(r) { return r.json(); }).then(resolve).catch(reject);
+            });
+        }
+
+        function loadData() {
+            apiCall('getData').then(function(allData) {
+                childData = allData.children.find(function(c) { return c.id === CHILD_ID; });
+                if (childData) {
+                    if (childData.newlyApproved && childData.newlyApproved.length > 0) {
+                        childData.newlyApproved.forEach(function(item) {
+                            pendingCelebrations.push({taskName: item.taskName, stars: item.stars, type: 'task'});
+                        });
+                        apiCall('clearNewlyApproved', { clear: { childId: CHILD_ID } });
+                    }
+                    if (childData.newlyApprovedRewards && childData.newlyApprovedRewards.length > 0) {
+                        childData.newlyApprovedRewards.forEach(function(item) {
+                            pendingCelebrations.push({rewardName: item.rewardName, rewardIcon: item.rewardIcon, cost: item.cost, type: 'reward'});
+                        });
+                        apiCall('clearNewlyApprovedRewards', { clear: { childId: CHILD_ID } });
+                    }
+                    if (pendingCelebrations.length > 0) showNextCelebration();
+                    renderAll();
+                }
+            }).catch(function(error) { console.error(error); });
+        }
+
+        function renderAll() {
+            if (!childData) return;
+            document.getElementById('playerName').textContent = childData.name;
+            document.getElementById('totalStars').textContent = childData.stars;
+            var cheapestReward = childData.rewards && childData.rewards.length > 0 
+                ? childData.rewards.reduce(function(a, b) { return a.cost < b.cost ? a : b; }) 
+                : { name: 'Add rewards!', cost: 100 };
+            document.getElementById('nextReward').textContent = cheapestReward.name;
+            document.getElementById('progressText').textContent = childData.stars + '/' + cheapestReward.cost;
+            document.getElementById('progressFill').style.width = Math.min((childData.stars / cheapestReward.cost) * 100, 100) + '%';
+            renderTasks();
+            renderRewards();
+        }
+
+        function renderTasks() {
+            var container = document.getElementById('taskList');
+            if (!childData.tasks || childData.tasks.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">📝</div><p>No tasks yet!</p></div>';
+                return;
+            }
+            container.innerHTML = '';
+            childData.tasks.forEach(function(task) {
+                var isPending = childData.pendingApprovals && childData.pendingApprovals.some(function(a) { return a.taskId === task.id; });
+                var status = task.completed ? 'completed' : isPending ? 'pending' : 'active';
+                var statusText = status === 'completed' ? '✨ Completed!' : status === 'pending' ? '💭 Waiting for parent...' : 'Tap when done!';
+                var checkbox = status === 'completed' ? '✓' : status === 'pending' ? '⏳' : '';
+                
+                var div = document.createElement('div');
+                div.className = 'task-item ' + status;
+                div.innerHTML = '<div class="task-checkbox">' + checkbox + '</div>' +
+                    '<div class="task-info"><div class="task-name">' + task.category + ' ' + task.name + '</div>' +
+                    '<div class="task-status">' + statusText + '</div></div>' +
+                    '<div class="task-stars">+' + task.stars + ' ⭐</div>';
+                
+                if (status === 'active') {
+                    div.onclick = function() { submitTask(task.id, task.name, task.stars); };
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function renderRewards() {
+            var container = document.getElementById('rewardsList');
+            if (!childData.rewards || childData.rewards.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="emoji">🎁</div><p>No rewards yet!</p></div>';
+                return;
+            }
+            container.innerHTML = '';
+            childData.rewards.forEach(function(reward) {
+                var isPending = childData.pendingRewardClaims && childData.pendingRewardClaims.some(function(c) { return c.rewardId === reward.id; });
+                var canAfford = childData.stars >= reward.cost;
+                var cardClass = isPending ? 'pending-claim' : canAfford ? 'affordable' : '';
+                var btnText = isPending ? '💭 Waiting...' : canAfford ? 'Get it! 💝' : 'Need ' + (reward.cost - childData.stars) + ' more';
+                
+                var div = document.createElement('div');
+                div.className = 'reward-card ' + cardClass;
+                
+                var btn = document.createElement('button');
+                btn.className = 'claim-btn';
+                btn.textContent = btnText;
+                if (!isPending && canAfford) {
+                    btn.onclick = function() { claimReward(reward.id, reward.name, reward.icon); };
+                } else {
+                    btn.disabled = true;
+                }
+                
+                div.innerHTML = '<div class="reward-icon">' + reward.icon + '</div>' +
+                    '<div class="reward-name">' + reward.name + '</div>' +
+                    '<div class="reward-cost">⭐ ' + reward.cost + '</div>';
+                div.appendChild(btn);
+                container.appendChild(div);
+            });
+        }
+
+        function submitTask(taskId, taskName, stars) {
+            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars } }).then(function() {
+                if (!childData.pendingApprovals) childData.pendingApprovals = [];
+                childData.pendingApprovals.push({ taskId: taskId, taskName: taskName, stars: stars });
+                renderTasks();
+                celebrate('📤', 'Task Sent!', 'Waiting for parent approval...', '');
+                setTimeout(closeCelebration, 2000);
+            }).catch(function(error) { console.error(error); });
+        }
+
+        function claimReward(rewardId, rewardName, icon) {
+            apiCall('claimReward', { claim: { childId: CHILD_ID, rewardId: rewardId } }).then(function() {
+                if (!childData.pendingRewardClaims) childData.pendingRewardClaims = [];
+                childData.pendingRewardClaims.push({ rewardId: rewardId, rewardName: rewardName, rewardIcon: icon });
+                renderRewards();
+                celebrate('🎁', 'Request Sent!', 'Waiting for parent approval...', '');
+                setTimeout(closeCelebration, 2000);
+            }).catch(function(error) { console.error(error); });
+        }
+
+        function showNextCelebration() {
+            if (pendingCelebrations.length === 0) return;
+            var item = pendingCelebrations.shift();
+            var chars = ['🎀', '😺', '🐰', '💖', '🌸'];
+            if (item.type === 'reward') {
+                celebrate(item.rewardIcon, 'Yay! 🎉', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' ⭐');
+            } else {
+                celebrate(chars[Math.floor(Math.random() * chars.length)], 'Wonderful!', '"' + item.taskName + '" approved!', '+' + item.stars + ' ⭐ Stars!');
+            }
+        }
+
+        function celebrate(character, title, message, stars) {
+            document.getElementById('celebrationChar').textContent = character;
+            document.getElementById('celebrationTitle').textContent = title;
+            document.getElementById('celebrationMessage').textContent = message;
+            document.getElementById('celebrationStars').textContent = stars;
+            document.getElementById('celebration').classList.remove('hidden');
+            createHeartConfetti();
+        }
+
+        function closeCelebration() {
+            document.getElementById('celebration').classList.add('hidden');
+            if (pendingCelebrations.length > 0) setTimeout(showNextCelebration, 300);
+        }
+
+        function createHeartConfetti() {
+            var hearts = ['💕', '💖', '💗', '💝', '🌸', '✨', '🎀', '⭐'];
+            for (var i = 0; i < 30; i++) {
+                (function(index) {
+                    setTimeout(function() {
+                        var c = document.createElement('div');
+                        c.className = 'heart-confetti';
+                        c.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                        c.style.left = Math.random() * 100 + 'vw';
+                        document.body.appendChild(c);
+                        setTimeout(function() { c.remove(); }, 5000);
+                    }, index * 100);
+                })(i);
+            }
+        }
+
+        setInterval(loadData, 30000);
+        loadData();
+    </script>
+</body>
+</html>
