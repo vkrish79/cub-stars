@@ -132,15 +132,58 @@
             <button class="celebration-btn" onclick="closeCelebration()">SMASH! 💥</button>
         </div>
     </div>
+    <!-- Loading Indicator -->
+    <div id="loader" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9998; justify-content:center; align-items:center;">
+        <div style="background:white; padding:25px 40px; border-radius:20px; text-align:center;">
+            <div style="font-size:2.5rem; animation: spin 1s linear infinite;">⭐</div>
+            <div style="margin-top:10px; font-weight:600; color:#333;">Loading...</div>
+        </div>
+    </div>
+    <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
         var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
+        var CACHE_KEY = 'cubstars_boy_cache';
         var childData = null;
         var pendingCelebrations = [];
+        var isLoading = false;
+        var lastFetch = 0;
+        var pollInterval = null;
 
+        // Show loading indicator
+        function showLoading(show) {
+            var loader = document.getElementById('loader');
+            if (loader) loader.style.display = show ? 'flex' : 'none';
+        }
+
+        // Cache management
+        function saveToCache(data) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    data: data,
+                    timestamp: Date.now()
+                }));
+            } catch(e) {}
+        }
+
+        function loadFromCache() {
+            try {
+                var cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    var parsed = JSON.parse(cached);
+                    // Cache valid for 5 minutes
+                    if (Date.now() - parsed.timestamp < 300000) {
+                        return parsed.data;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // Optimized API call with timeout
         function apiCall(action, params) {
             params = params || {};
             return new Promise(function(resolve, reject) {
@@ -150,31 +193,100 @@
                     var value = params[key];
                     url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
                 }
-                fetch(url.toString()).then(function(r) { return r.json(); }).then(resolve).catch(reject);
+                
+                var timeout = setTimeout(function() {
+                    reject(new Error('Timeout'));
+                }, 15000);
+                
+                fetch(url.toString())
+                    .then(function(r) { 
+                        clearTimeout(timeout);
+                        return r.json(); 
+                    })
+                    .then(resolve)
+                    .catch(function(e) {
+                        clearTimeout(timeout);
+                        reject(e);
+                    });
             });
         }
 
-        function loadData() {
+        // Load data with cache-first strategy
+        function loadData(forceRefresh) {
+            if (isLoading) return;
+            
+            // Throttle: minimum 5 seconds between fetches
+            if (!forceRefresh && Date.now() - lastFetch < 5000) return;
+            
+            // Show cached data immediately
+            if (!forceRefresh && !childData) {
+                var cached = loadFromCache();
+                if (cached) {
+                    childData = cached;
+                    renderAll();
+                }
+            }
+            
+            isLoading = true;
+            showLoading(true);
+            lastFetch = Date.now();
+            
             apiCall('getData').then(function(allData) {
-                childData = allData.children.find(function(c) { return c.id === CHILD_ID; });
-                if (childData) {
-                    if (childData.newlyApproved && childData.newlyApproved.length > 0) {
-                        childData.newlyApproved.forEach(function(item) {
+                var newChildData = allData.children.find(function(c) { return c.id === CHILD_ID; });
+                if (newChildData) {
+                    // Check for newly approved items
+                    if (newChildData.newlyApproved && newChildData.newlyApproved.length > 0) {
+                        newChildData.newlyApproved.forEach(function(item) {
                             pendingCelebrations.push({taskName: item.taskName, stars: item.stars, type: 'task'});
                         });
                         apiCall('clearNewlyApproved', { clear: { childId: CHILD_ID } });
                     }
-                    if (childData.newlyApprovedRewards && childData.newlyApprovedRewards.length > 0) {
-                        childData.newlyApprovedRewards.forEach(function(item) {
+                    if (newChildData.newlyApprovedRewards && newChildData.newlyApprovedRewards.length > 0) {
+                        newChildData.newlyApprovedRewards.forEach(function(item) {
                             pendingCelebrations.push({rewardName: item.rewardName, rewardIcon: item.rewardIcon, cost: item.cost, type: 'reward'});
                         });
                         apiCall('clearNewlyApprovedRewards', { clear: { childId: CHILD_ID } });
                     }
+                    
+                    childData = newChildData;
+                    saveToCache(newChildData);
+                    
                     if (pendingCelebrations.length > 0) showNextCelebration();
                     renderAll();
                 }
-            }).catch(function(error) { console.error(error); });
+            }).catch(function(error) { 
+                console.error(error);
+            }).finally(function() {
+                isLoading = false;
+                showLoading(false);
+            });
         }
+
+        // Smart polling - poll more when app is active, less when hidden
+        function startSmartPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(function() {
+                if (!document.hidden) loadData();
+            }, 60000); // Poll every 60 seconds instead of 30
+        }
+
+        // Refresh when app becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) loadData();
+        });
+
+        // Pull to refresh on mobile
+        var touchStartY = 0;
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        }, {passive: true});
+        
+        document.addEventListener('touchend', function(e) {
+            var touchEndY = e.changedTouches[0].clientY;
+            if (window.scrollY === 0 && touchEndY - touchStartY > 100) {
+                loadData(true);
+            }
+        }, {passive: true});
 
         function renderAll() {
             if (!childData) return;
@@ -310,7 +422,8 @@
             }
         }
 
-        setInterval(loadData, 30000);
+        // Initialize app
+        startSmartPolling();
         loadData();
     </script>
 </body>

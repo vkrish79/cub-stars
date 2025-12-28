@@ -171,9 +171,42 @@
         var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
+        var CACHE_KEY = 'cubstars_parent_cache';
         var data = { children: [] };
         var selectedChildId = null;
+        var isLoading = false;
+        var lastFetch = 0;
 
+        // Show loading indicator
+        function showLoading(show) {
+            var btn = document.querySelector('.refresh-btn');
+            if (btn) btn.classList.toggle('loading', show);
+        }
+
+        // Cache management
+        function saveToCache(data) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    data: data,
+                    timestamp: Date.now()
+                }));
+            } catch(e) {}
+        }
+
+        function loadFromCache() {
+            try {
+                var cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    var parsed = JSON.parse(cached);
+                    if (Date.now() - parsed.timestamp < 300000) {
+                        return parsed.data;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // Optimized API call with timeout
         function apiCall(action, params) {
             params = params || {};
             return new Promise(function(resolve, reject) {
@@ -183,22 +216,59 @@
                     var value = params[key];
                     url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
                 }
-                fetch(url.toString()).then(function(r) { return r.json(); }).then(resolve).catch(reject);
+                
+                var timeout = setTimeout(function() {
+                    reject(new Error('Timeout'));
+                }, 15000);
+                
+                fetch(url.toString())
+                    .then(function(r) { 
+                        clearTimeout(timeout);
+                        return r.json(); 
+                    })
+                    .then(resolve)
+                    .catch(function(e) {
+                        clearTimeout(timeout);
+                        reject(e);
+                    });
             });
         }
 
-        function loadData() {
-            document.querySelector('.refresh-btn').classList.add('loading');
+        function loadData(forceRefresh) {
+            if (isLoading) return;
+            
+            if (!forceRefresh && Date.now() - lastFetch < 5000) return;
+            
+            // Show cached data immediately
+            if (!forceRefresh && data.children.length === 0) {
+                var cached = loadFromCache();
+                if (cached) {
+                    data = cached;
+                    renderAll();
+                }
+            }
+            
+            isLoading = true;
+            showLoading(true);
+            lastFetch = Date.now();
+            
             apiCall('getData').then(function(result) {
                 data = result;
+                saveToCache(result);
                 renderAll();
                 showToast('Data loaded!', 'success');
             }).catch(function(error) {
                 showToast('Error loading data', 'error');
             }).finally(function() {
-                document.querySelector('.refresh-btn').classList.remove('loading');
+                isLoading = false;
+                showLoading(false);
             });
         }
+
+        // Refresh when app becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) loadData();
+        });
 
         function renderAll() {
             renderChildSelector();
