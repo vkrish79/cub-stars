@@ -64,6 +64,10 @@
         .task-checkbox { width: 45px; height: 45px; border-radius: 50%; border: 4px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
         .task-item.completed .task-checkbox { background: var(--hulk-green); border-color: var(--hulk-green); color: white; }
         .task-item.pending .task-checkbox { background: #ffc107; border-color: #ffc107; }
+        .task-item:active { transform: scale(0.95); }
+        .task-item.tapped { animation: taskTap 0.3s ease; }
+        @keyframes taskTap { 0% { transform: scale(1); } 50% { transform: scale(0.9); background: #C8E6C9; } 100% { transform: scale(1); } }
+        .reward-card:active { transform: scale(0.95); }
         .task-info { flex: 1; }
         .task-name { font-weight: 700; color: var(--dark); font-size: 1.1rem; }
         .task-item.completed .task-name { text-decoration: line-through; }
@@ -142,7 +146,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -323,7 +327,10 @@
                     '<div class="task-stars">+' + task.stars + ' ⭐</div>';
                 
                 if (status === 'active') {
-                    div.onclick = function() { submitTask(task.id, task.name, task.stars); };
+                    div.onclick = function() { 
+                        div.classList.add('tapped');
+                        submitTask(task.id, task.name, task.stars); 
+                    };
                 }
                 container.appendChild(div);
             });
@@ -363,28 +370,112 @@
         }
 
         function submitTask(taskId, taskName, stars) {
-            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars } }).then(function() {
-                if (!childData.pendingApprovals) childData.pendingApprovals = [];
-                childData.pendingApprovals.push({ taskId: taskId, taskName: taskName, stars: stars });
-                renderTasks();
-                celebrate('🕸️', 'Mission Sent!', 'Waiting for parent approval...', '');
-                setTimeout(closeCelebration, 2000);
-            }).catch(function(error) { console.error(error); });
+            // Instant visual feedback - don't wait for API!
+            
+            // 1. Immediately mark as pending in local state
+            if (!childData.pendingApprovals) childData.pendingApprovals = [];
+            childData.pendingApprovals.push({ taskId: taskId, taskName: taskName, stars: stars });
+            
+            // 2. Re-render tasks immediately
+            renderTasks();
+            
+            // 3. Show celebration RIGHT NOW
+            celebrateSubmission(taskName);
+            
+            // 4. API call happens in background
+            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars } })
+                .catch(function(error) { 
+                    console.error(error);
+                    showToast('Error - please try again', 'error');
+                });
+        }
+
+        function celebrateSubmission(taskName) {
+            // Play success sound
+            playSuccessSound();
+            
+            // Haptic feedback if available
+            if (navigator.vibrate) navigator.vibrate(50);
+            
+            // Quick burst of confetti
+            createQuickConfetti();
+            
+            // Show submission celebration
+            document.getElementById('celebrationHero').textContent = '🚀';
+            document.getElementById('celebrationTitle').textContent = 'SENT!';
+            document.getElementById('celebrationMessage').textContent = '"' + taskName + '" sent to parent!';
+            document.getElementById('celebrationStars').textContent = '⏳ Waiting for approval...';
+            document.getElementById('celebration').classList.remove('hidden');
+            
+            // Auto-close after 2 seconds
+            setTimeout(closeCelebration, 2000);
+        }
+
+        function createQuickConfetti() {
+            var items = ['🚀', '✨', '⭐', '💫', '🌟', '⚡'];
+            for (var i = 0; i < 20; i++) {
+                (function(index) {
+                    setTimeout(function() {
+                        var c = document.createElement('div');
+                        c.className = 'confetti';
+                        c.textContent = items[Math.floor(Math.random() * items.length)];
+                        c.style.left = Math.random() * 100 + 'vw';
+                        c.style.animationDuration = '2s';
+                        document.body.appendChild(c);
+                        setTimeout(function() { c.remove(); }, 2500);
+                    }, index * 40);
+                })(i);
+            }
         }
 
         function claimReward(rewardId, rewardName, icon) {
-            apiCall('claimReward', { claim: { childId: CHILD_ID, rewardId: rewardId } }).then(function() {
-                if (!childData.pendingRewardClaims) childData.pendingRewardClaims = [];
-                childData.pendingRewardClaims.push({ rewardId: rewardId, rewardName: rewardName, rewardIcon: icon });
-                renderRewards();
-                celebrate('🎁', 'Request Sent!', 'Waiting for parent approval...', '');
-                setTimeout(closeCelebration, 2000);
-            }).catch(function(error) { console.error(error); });
+            // Instant visual feedback
+            if (!childData.pendingRewardClaims) childData.pendingRewardClaims = [];
+            childData.pendingRewardClaims.push({ rewardId: rewardId, rewardName: rewardName, rewardIcon: icon });
+            
+            renderRewards();
+            celebrateRewardClaim(rewardName, icon);
+            
+            apiCall('claimReward', { claim: { childId: CHILD_ID, rewardId: rewardId } })
+                .catch(function(error) { 
+                    console.error(error);
+                    showToast('Error - please try again', 'error');
+                });
+        }
+
+        function celebrateRewardClaim(rewardName, icon) {
+            createQuickConfetti();
+            
+            document.getElementById('celebrationHero').textContent = icon;
+            document.getElementById('celebrationTitle').textContent = 'REQUESTED!';
+            document.getElementById('celebrationMessage').textContent = '"' + rewardName + '" sent to parent!';
+            document.getElementById('celebrationStars').textContent = '⏳ Waiting for approval...';
+            document.getElementById('celebration').classList.remove('hidden');
+            
+            setTimeout(closeCelebration, 2000);
+        }
+
+        function showToast(message, type) {
+            var existing = document.querySelector('.toast-msg');
+            if (existing) existing.remove();
+            
+            var toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            toast.textContent = message;
+            toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:' + 
+                (type === 'error' ? '#E74C3C' : '#27AE60') + ';color:white;padding:12px 25px;border-radius:50px;font-weight:600;z-index:10000;';
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
         }
 
         function showNextCelebration() {
             if (pendingCelebrations.length === 0) return;
             var item = pendingCelebrations.shift();
+            
+            // Play bigger celebration sound for approvals!
+            playApprovalSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            
             if (item.type === 'reward') {
                 celebrate(item.rewardIcon, 'REWARD UNLOCKED!', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' ⭐');
             } else {
@@ -425,6 +516,42 @@
         // Initialize app
         startSmartPolling();
         loadData();
+
+        // Sound effect using Web Audio API
+        function playSuccessSound() {
+            try {
+                var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(523, ctx.currentTime); // C5
+                osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
+                osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.4);
+            } catch(e) {}
+        }
+
+        function playApprovalSound() {
+            try {
+                var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(392, ctx.currentTime); // G4
+                osc.frequency.setValueAtTime(523, ctx.currentTime + 0.15); // C5
+                osc.frequency.setValueAtTime(659, ctx.currentTime + 0.3); // E5
+                osc.frequency.setValueAtTime(784, ctx.currentTime + 0.45); // G5
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.6);
+            } catch(e) {}
+        }
     </script>
 </body>
 </html>
