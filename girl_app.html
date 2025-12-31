@@ -320,6 +320,97 @@
             .task-list { grid-template-columns: repeat(2, 1fr); gap: 25px; }
             .rewards-grid { grid-template-columns: repeat(4, 1fr); gap: 25px; }
         }
+        
+        /* Coupon Styles */
+        .coupon-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 10000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .coupon {
+            max-width: 500px;
+            margin: 0 auto;
+            font-family: 'Nunito', Arial, sans-serif;
+        }
+        .coupon-border {
+            border: 4px dashed #FF69B4;
+            border-radius: 20px;
+            padding: 30px;
+            background: linear-gradient(135deg, #FFF0F5 0%, #FFE4EC 100%);
+            text-align: center;
+        }
+        .coupon-header {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 1.5rem;
+            color: #FF69B4;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        .coupon-icon {
+            font-size: 4rem;
+            margin: 15px 0;
+        }
+        .coupon-reward {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 2rem;
+            color: #9B59B6;
+            margin: 10px 0;
+        }
+        .coupon-for {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 20px;
+        }
+        .coupon-name {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 1.8rem;
+            color: #FF69B4;
+            margin: 5px 0 15px;
+        }
+        .coupon-message {
+            font-size: 1rem;
+            color: #555;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        .coupon-date {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 15px;
+        }
+        .coupon-id {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+        .coupon-footer {
+            margin-top: 20px;
+            color: #FFB6C1;
+            letter-spacing: 2px;
+        }
+        
+        @media print {
+            body * { visibility: hidden; }
+            .coupon-container, .coupon-container * { visibility: visible; }
+            .coupon-container { 
+                display: block !important;
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%;
+                padding: 0;
+            }
+            .coupon { max-width: 100%; }
+            .coupon-border { border-width: 3px; }
+        }
     </style>
 </head>
 <body>
@@ -412,6 +503,24 @@
             <div class="celebration-badges" id="celebrationBadges" style="display:none;"></div>
             <div class="celebration-parent-msg" id="celebrationParentMsg" style="display:none; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 15px; font-style: italic;"></div>
             <button class="celebration-btn" onclick="closeCelebration()">Yay! 💖</button>
+            <button class="celebration-btn coupon-btn" id="printCouponBtn" style="display:none; background: linear-gradient(135deg, #FFD700, #FFA500); margin-top: 10px;" onclick="printCoupon()">🎟️ Print Coupon</button>
+        </div>
+    </div>
+    
+    <!-- Coupon Print Template -->
+    <div id="couponPrint" class="coupon-container">
+        <div class="coupon">
+            <div class="coupon-border">
+                <div class="coupon-header">🎉 CUB STARS REWARD COUPON 🎉</div>
+                <div class="coupon-icon" id="couponIcon">🎁</div>
+                <div class="coupon-reward" id="couponReward">Reward Name</div>
+                <div class="coupon-for">This coupon is awarded to</div>
+                <div class="coupon-name" id="couponName">Child Name</div>
+                <div class="coupon-message">For being AMAZING! Keep up the great work! 🌟</div>
+                <div class="coupon-date" id="couponDate">Valid: January 1, 2026</div>
+                <div class="coupon-id" id="couponId">CUB-XXXXX</div>
+                <div class="coupon-footer">✂️ - - - - - - - - - - - - - - - - - - - - - - - - - - - ✂️</div>
+            </div>
         </div>
     </div>
     <!-- Loading Indicator -->
@@ -424,7 +533,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
@@ -438,6 +547,7 @@
         // Photo/submission state
         var currentSubmitTask = null;
         var capturedPhoto = null;
+        var currentCoupon = null;
         var videoStream = null;
         
         // Badge definitions
@@ -1034,10 +1144,23 @@
             document.getElementById('celebrationBadges').style.display = 'none';
             document.getElementById('celebrationParentMsg').style.display = 'none';
             
+            // Handle coupon for rewards
+            var printBtn = document.getElementById('printCouponBtn');
             var chars = ['🎀', '😺', '🐰', '💖', '🌸'];
             if (item.type === 'reward') {
+                currentCoupon = {
+                    rewardName: item.rewardName,
+                    rewardIcon: item.rewardIcon,
+                    cost: item.cost,
+                    couponId: item.couponId || 'CUB-' + Date.now().toString(36).toUpperCase(),
+                    childName: childData.name,
+                    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                };
+                printBtn.style.display = 'block';
                 celebrate(item.rewardIcon, 'Yay! 🎉', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' <span class="cub-coin"></span>', item.newBadges);
             } else {
+                currentCoupon = null;
+                printBtn.style.display = 'none';
                 celebrate(chars[Math.floor(Math.random() * chars.length)], 'Wonderful!', '"' + item.taskName + '" approved!', '+' + item.stars + ' <span class="cub-coin"></span> Coins!', item.newBadges, item.message);
             }
         }
@@ -1078,7 +1201,29 @@
 
         function closeCelebration() {
             document.getElementById('celebration').classList.add('hidden');
+            document.getElementById('printCouponBtn').style.display = 'none';
             if (pendingCelebrations.length > 0) setTimeout(showNextCelebration, 300);
+        }
+
+        function printCoupon() {
+            if (!currentCoupon) return;
+            
+            // Populate coupon
+            document.getElementById('couponIcon').textContent = currentCoupon.rewardIcon;
+            document.getElementById('couponReward').textContent = currentCoupon.rewardName;
+            document.getElementById('couponName').textContent = currentCoupon.childName;
+            document.getElementById('couponDate').textContent = 'Earned: ' + currentCoupon.date;
+            document.getElementById('couponId').textContent = currentCoupon.couponId;
+            
+            // Show coupon and print
+            document.getElementById('couponPrint').style.display = 'block';
+            
+            setTimeout(function() {
+                window.print();
+                setTimeout(function() {
+                    document.getElementById('couponPrint').style.display = 'none';
+                }, 500);
+            }, 100);
         }
 
         function createHeartConfetti() {
