@@ -43,29 +43,26 @@
             margin: 0 2px;
         }
         .cub-coin::before {
-            content: '🦁';
+            content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.7em;
-            filter: sepia(1) saturate(0.3) brightness(0.8);
-            text-shadow: 0.5px 0.5px 0 rgba(139,90,43,0.5), -0.5px -0.5px 0 rgba(255,215,0,0.3);
+            width: 70%;
+            height: 70%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='30' cy='35' r='8' fill='%23704214'/%3E%3Ccircle cx='70' cy='35' r='8' fill='%23704214'/%3E%3Ccircle cx='32' cy='33' r='2' fill='%23fff'/%3E%3Ccircle cx='72' cy='33' r='2' fill='%23fff'/%3E%3Cellipse cx='50' cy='55' rx='6' ry='5' fill='%23704214'/%3E%3Cpath d='M 35 65 Q 50 80 65 65' stroke='%23704214' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
         .cub-coin-lg {
             width: 1.5em;
             height: 1.5em;
         }
-        .cub-coin-lg::before {
-            font-size: 0.8em;
-        }
         .cub-coin-xl {
             width: 2.5em;
             height: 2.5em;
             border-width: 3px;
-        }
-        .cub-coin-xl::before {
-            font-size: 1.2em;
         }
         
         html, body { height: 100%; overflow-x: hidden; }
@@ -418,7 +415,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
