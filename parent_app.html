@@ -108,7 +108,8 @@
             <button class="tab-btn active" onclick="switchTab('approvals', this)">✅ Approvals <span class="notification-badge" id="approvalCount">0</span></button>
             <button class="tab-btn" onclick="switchTab('manage', this)">📋 Manage Tasks</button>
             <button class="tab-btn" onclick="switchTab('rewards', this)">🎁 Manage Rewards</button>
-            <button class="tab-btn" onclick="switchTab('stars', this)">⭐ Manage Stars</button>
+            <button class="tab-btn" onclick="switchTab('stars', this)">⭐ Manage Coins</button>
+            <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Reset</button>
             <button class="refresh-btn" onclick="loadData()" title="Refresh">🔄</button>
         </div>
         <div class="child-selector" id="childSelector"></div>
@@ -154,12 +155,12 @@
         </div>
         <div class="tab-panel" id="starsPanel">
             <div class="card">
-                <h2 class="card-title">⭐ Manage Stars for <span id="starsChildName">Select Child</span></h2>
-                <p style="color: #666; margin-bottom: 15px;">Add bonus stars or remove stars as needed.</p>
+                <h2 class="card-title">🪙 Manage Coins for <span id="starsChildName">Select Child</span></h2>
+                <p style="color: #666; margin-bottom: 15px;">Add bonus coins or remove coins as needed.</p>
                 <div class="stars-control">
                     <input type="number" id="starsAmount" value="5" min="1" max="100">
-                    <button class="btn btn-success" onclick="addStars()">➕ Add Stars</button>
-                    <button class="btn btn-danger" onclick="removeStars()">➖ Remove Stars</button>
+                    <button class="btn btn-success" onclick="addStars()">➕ Add Coins</button>
+                    <button class="btn btn-danger" onclick="removeStars()">➖ Remove Coins</button>
                 </div>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
                     <h4 style="margin-bottom: 15px;">💌 Send Encouragement</h4>
@@ -168,11 +169,51 @@
                 <div id="starsHistory" style="margin-top: 20px;"></div>
             </div>
         </div>
+        <div class="tab-panel" id="settingsPanel">
+            <div class="card">
+                <h2 class="card-title">⚙️ Reset Progress for <span id="settingsChildName">Select Child</span></h2>
+                <p style="color: #666; margin-bottom: 20px;">Reset specific progress items for the selected child. This cannot be undone!</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="background: #FFF3CD; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>🔥 Reset Streak</strong>
+                            <div style="font-size: 0.85rem; color: #666;">Sets current streak and longest streak to 0</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="resetProgress('streak')">Reset Streak</button>
+                    </div>
+                    
+                    <div style="background: #F0F4FF; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>🏆 Reset Badges</strong>
+                            <div style="font-size: 0.85rem; color: #666;">Removes all earned badges</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="resetProgress('badges')">Reset Badges</button>
+                    </div>
+                    
+                    <div style="background: #FFF8E1; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>🪙 Reset Coins</strong>
+                            <div style="font-size: 0.85rem; color: #666;">Sets coin balance to 0</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="resetProgress('coins')">Reset Coins</button>
+                    </div>
+                    
+                    <div style="background: #FFEBEE; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border: 2px solid #E53935;">
+                        <div>
+                            <strong>⚠️ Reset Everything</strong>
+                            <div style="font-size: 0.85rem; color: #666;">Resets streak, badges, coins, tasks, and messages</div>
+                        </div>
+                        <button class="btn" style="background: #C62828; color: white;" onclick="resetProgress('all')">Reset All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="toast" id="toast"></div>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CACHE_KEY = 'cubstars_parent_cache';
@@ -294,7 +335,7 @@
                 html += '<div class="child-card ' + child.type + ' ' + isActive + '" onclick="selectChild(\'' + child.id + '\')">' +
                     '<div class="child-avatar">' + child.avatar + '</div>' +
                     '<div class="child-name">' + child.name + '</div>' +
-                    '<div class="child-stars">⭐ ' + child.stars + ' Stars</div>' +
+                    '<div class="child-stars">🪙 ' + child.stars + ' Coins</div>' +
                     streakHtml + badgeHtml + '</div>';
             });
             container.innerHTML = html;
@@ -419,7 +460,8 @@
 
         function renderStars() {
             var child = data.children.find(function(c) { return c.id === selectedChildId; });
-            document.getElementById('starsChildName').textContent = child ? child.name + ' (Current: ' + child.stars + ' ⭐)' : 'Select Child';
+            document.getElementById('starsChildName').textContent = child ? child.name + ' (Current: ' + child.stars + ' 🪙)' : 'Select Child';
+            document.getElementById('settingsChildName').textContent = child ? child.name : 'Select Child';
             var container = document.getElementById('starsHistory');
             if (!child || !child.history || child.history.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="emoji">📜</div><p>No history yet.</p></div>';
@@ -431,7 +473,7 @@
                 var color = h.type === 'earned' ? '#4CAF50' : '#FF9800';
                 var sign = h.type === 'earned' ? '+' : '-';
                 html += '<div style="padding:10px;background:' + bg + ';border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;">' +
-                    '<span>' + h.action + '</span><span style="color:' + color + ';font-weight:600;">' + sign + h.stars + ' ⭐</span></div>';
+                    '<span>' + h.action + '</span><span style="color:' + color + ';font-weight:600;">' + sign + h.stars + ' 🪙</span></div>';
             });
             container.innerHTML = html;
         }
@@ -523,7 +565,7 @@
             var amount = parseInt(document.getElementById('starsAmount').value);
             if (!amount || !selectedChildId) return;
             apiCall('addStars', { stars: { childId: selectedChildId, amount: amount } }).then(function() {
-                showToast('Added ' + amount + ' stars! ⭐', 'success');
+                showToast('Added ' + amount + ' coins! 🪙', 'success');
                 loadData();
             }).catch(function() { showToast('Error', 'error'); });
         }
@@ -532,9 +574,36 @@
             var amount = parseInt(document.getElementById('starsAmount').value);
             if (!amount || !selectedChildId) return;
             apiCall('removeStars', { stars: { childId: selectedChildId, amount: amount } }).then(function() {
-                showToast('Removed ' + amount + ' stars', 'success');
+                showToast('Removed ' + amount + ' coins', 'success');
                 loadData();
             }).catch(function() { showToast('Error', 'error'); });
+        }
+
+        function resetProgress(type) {
+            if (!selectedChildId) {
+                showToast('Please select a child first', 'error');
+                return;
+            }
+            
+            var messages = {
+                streak: 'Reset streak to 0?',
+                badges: 'Remove all badges?',
+                coins: 'Reset coins to 0?',
+                all: '⚠️ Reset ALL progress? This includes streak, badges, coins, tasks, and messages!'
+            };
+            
+            if (!confirm(messages[type])) return;
+            
+            apiCall('resetProgress', { reset: { childId: selectedChildId, type: type } }).then(function() {
+                var successMessages = {
+                    streak: '🔥 Streak reset to 0',
+                    badges: '🏆 All badges removed',
+                    coins: '🪙 Coins reset to 0',
+                    all: '⚠️ All progress reset'
+                };
+                showToast(successMessages[type], 'success');
+                loadData();
+            }).catch(function() { showToast('Error resetting', 'error'); });
         }
 
         function switchTab(tabName, btn) {
