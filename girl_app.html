@@ -42,12 +42,45 @@
             overscroll-behavior: none;
         }
         .container { max-width: 500px; margin: 0 auto; }
-        .kawaii-header { background: linear-gradient(135deg, var(--kitty-pink) 0%, var(--melody-pink) 100%); border-radius: 30px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(255,105,180,0.3); display: flex; flex-direction: column; }
+        .kawaii-header { background: linear-gradient(135deg, var(--kitty-pink) 0%, var(--melody-pink) 100%); border-radius: 30px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(255,105,180,0.3); display: flex; flex-direction: column; position: relative; }
         .kawaii-title { font-family: 'Pacifico', cursive; font-size: 2rem; color: var(--white); text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
         .kawaii-name { font-family: 'Pacifico', cursive; font-size: 1.6rem; color: var(--yellow); text-align: center; margin-top: 10px; }
         .stars-display { background: rgba(255,255,255,0.25); border-radius: 25px; padding: 20px; margin-top: 20px; text-align: center; }
         .stars-count { font-size: 3.5rem; font-weight: 700; color: var(--white); }
         .stars-label { color: var(--white); font-weight: 600; font-size: 1rem; margin-top: 5px; }
+        
+        /* Refresh Button */
+        .refresh-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.3);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.5); }
+        .refresh-btn:active, .refresh-btn.pressed {
+            transform: scale(0.85);
+            background: rgba(255,255,255,0.6);
+        }
+        .refresh-btn.spinning .refresh-icon {
+            animation: spinRefresh 1s linear infinite;
+        }
+        @keyframes spinRefresh {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
         .progress-section { margin-top: 15px; }
         .progress-label { display: flex; justify-content: space-between; color: rgba(255,255,255,0.95); font-weight: 600; margin-bottom: 8px; font-size: 0.85rem; }
         .progress-bar { height: 18px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; }
@@ -110,9 +143,18 @@
                 align-items: center;
                 gap: 40px;
             }
-            .kawaii-header > div:first-child { flex: 1; }
+            .kawaii-header > div:first-of-type { flex: 1; }
             .kawaii-title { font-size: 2.8rem; text-align: left; }
             .kawaii-name { font-size: 2rem; text-align: left; }
+            
+            .refresh-btn {
+                top: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+            
             .stars-display { 
                 margin-top: 0; 
                 min-width: 280px;
@@ -184,6 +226,9 @@
 <body>
     <div class="container">
         <div class="kawaii-header">
+            <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()">
+                <span class="refresh-icon">🔄</span>
+            </button>
             <div>
                 <div class="kawaii-title">🎀 Cub Stars! 🌸</div>
                 <div class="kawaii-name" id="playerName">Loading...</div>
@@ -228,7 +273,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
@@ -239,10 +284,42 @@
         var lastFetch = 0;
         var pollInterval = null;
 
+        // Refresh button handler with animation
+        function handleRefresh() {
+            var btn = document.getElementById('refreshBtn');
+            
+            // Add pressed animation
+            btn.classList.add('pressed');
+            setTimeout(function() {
+                btn.classList.remove('pressed');
+            }, 150);
+            
+            // Add spinning animation
+            btn.classList.add('spinning');
+            
+            // Force refresh data
+            loadData(true);
+            
+            // Remove spinning after data loads (or timeout)
+            setTimeout(function() {
+                btn.classList.remove('spinning');
+            }, 2000);
+        }
+
         // Show loading indicator
         function showLoading(show) {
             var loader = document.getElementById('loader');
             if (loader) loader.style.display = show ? 'flex' : 'none';
+            
+            // Also update refresh button
+            var btn = document.getElementById('refreshBtn');
+            if (btn) {
+                if (show) {
+                    btn.classList.add('spinning');
+                } else {
+                    btn.classList.remove('spinning');
+                }
+            }
         }
 
         // Cache management
@@ -355,19 +432,6 @@
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) loadData();
         });
-
-        // Pull to refresh
-        var touchStartY = 0;
-        document.addEventListener('touchstart', function(e) {
-            touchStartY = e.touches[0].clientY;
-        }, {passive: true});
-        
-        document.addEventListener('touchend', function(e) {
-            var touchEndY = e.changedTouches[0].clientY;
-            if (window.scrollY === 0 && touchEndY - touchStartY > 100) {
-                loadData(true);
-            }
-        }, {passive: true});
 
         function renderAll() {
             if (!childData) return;

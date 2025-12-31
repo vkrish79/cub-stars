@@ -42,12 +42,45 @@
             overscroll-behavior: none;
         }
         .container { max-width: 500px; margin: 0 auto; }
-        .hero-header { background: linear-gradient(135deg, var(--spidey-red) 0%, var(--spidey-blue) 100%); border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+        .hero-header { background: linear-gradient(135deg, var(--spidey-red) 0%, var(--spidey-blue) 100%); border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; position: relative; }
         .hero-title { font-family: 'Bangers', cursive; font-size: 2.2rem; color: var(--white); text-align: center; letter-spacing: 3px; text-shadow: 3px 3px 0 rgba(0,0,0,0.3); }
         .hero-name { font-family: 'Bangers', cursive; font-size: 1.8rem; color: var(--yellow); text-align: center; margin-top: 10px; }
         .stars-display { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; margin-top: 20px; text-align: center; }
         .stars-count { font-family: 'Bangers', cursive; font-size: 4rem; color: var(--yellow); }
         .stars-label { color: var(--white); font-weight: 700; font-size: 1.1rem; }
+        
+        /* Refresh Button */
+        .refresh-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.4); }
+        .refresh-btn:active, .refresh-btn.pressed {
+            transform: scale(0.85);
+            background: rgba(255,255,255,0.5);
+        }
+        .refresh-btn.spinning .refresh-icon {
+            animation: spinRefresh 1s linear infinite;
+        }
+        @keyframes spinRefresh {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
         .progress-section { margin-top: 15px; }
         .progress-label { display: flex; justify-content: space-between; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
         .progress-bar { height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; }
@@ -112,9 +145,18 @@
                 align-items: center;
                 gap: 40px;
             }
-            .hero-header > div:first-child { flex: 1; }
+            .hero-header > div:first-of-type { flex: 1; }
             .hero-title { font-size: 3rem; text-align: left; }
             .hero-name { font-size: 2.2rem; text-align: left; }
+            
+            .refresh-btn {
+                top: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+            
             .stars-display { 
                 margin-top: 0; 
                 min-width: 280px;
@@ -186,6 +228,9 @@
 <body>
     <div class="container">
         <div class="hero-header">
+            <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()">
+                <span class="refresh-icon">🔄</span>
+            </button>
             <div>
                 <div class="hero-title">🕸️ CUB STARS! 💪</div>
                 <div class="hero-name" id="heroName">Loading...</div>
@@ -230,7 +275,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -241,10 +286,42 @@
         var lastFetch = 0;
         var pollInterval = null;
 
+        // Refresh button handler with animation
+        function handleRefresh() {
+            var btn = document.getElementById('refreshBtn');
+            
+            // Add pressed animation
+            btn.classList.add('pressed');
+            setTimeout(function() {
+                btn.classList.remove('pressed');
+            }, 150);
+            
+            // Add spinning animation
+            btn.classList.add('spinning');
+            
+            // Force refresh data
+            loadData(true);
+            
+            // Remove spinning after data loads (or timeout)
+            setTimeout(function() {
+                btn.classList.remove('spinning');
+            }, 2000);
+        }
+
         // Show loading indicator
         function showLoading(show) {
             var loader = document.getElementById('loader');
             if (loader) loader.style.display = show ? 'flex' : 'none';
+            
+            // Also update refresh button
+            var btn = document.getElementById('refreshBtn');
+            if (btn) {
+                if (show) {
+                    btn.classList.add('spinning');
+                } else {
+                    btn.classList.remove('spinning');
+                }
+            }
         }
 
         // Cache management
@@ -362,19 +439,6 @@
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) loadData();
         });
-
-        // Pull to refresh on mobile
-        var touchStartY = 0;
-        document.addEventListener('touchstart', function(e) {
-            touchStartY = e.touches[0].clientY;
-        }, {passive: true});
-        
-        document.addEventListener('touchend', function(e) {
-            var touchEndY = e.changedTouches[0].clientY;
-            if (window.scrollY === 0 && touchEndY - touchStartY > 100) {
-                loadData(true);
-            }
-        }, {passive: true});
 
         function renderAll() {
             if (!childData) return;
