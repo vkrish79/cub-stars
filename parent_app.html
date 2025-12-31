@@ -161,6 +161,10 @@
                     <button class="btn btn-success" onclick="addStars()">➕ Add Stars</button>
                     <button class="btn btn-danger" onclick="removeStars()">➖ Remove Stars</button>
                 </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                    <h4 style="margin-bottom: 15px;">💌 Send Encouragement</h4>
+                    <button class="btn" style="background: linear-gradient(135deg, #9B59B6, #8E44AD); color: white;" onclick="sendMessage()">💌 Send Message to Child</button>
+                </div>
                 <div id="starsHistory" style="margin-top: 20px;"></div>
             </div>
         </div>
@@ -168,7 +172,7 @@
     <div class="toast" id="toast"></div>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CACHE_KEY = 'cubstars_parent_cache';
@@ -284,10 +288,14 @@
             var html = '';
             data.children.forEach(function(child) {
                 var isActive = child.id === selectedChildId ? 'active' : '';
+                var streakHtml = child.streak > 0 ? '<div style="font-size:0.8rem;color:#FF6B35;">🔥 ' + child.streak + ' day streak</div>' : '';
+                var badgeCount = (child.badges || []).length;
+                var badgeHtml = badgeCount > 0 ? '<div style="font-size:0.75rem;color:#888;">🏆 ' + badgeCount + ' badges</div>' : '';
                 html += '<div class="child-card ' + child.type + ' ' + isActive + '" onclick="selectChild(\'' + child.id + '\')">' +
                     '<div class="child-avatar">' + child.avatar + '</div>' +
                     '<div class="child-name">' + child.name + '</div>' +
-                    '<div class="child-stars">⭐ ' + child.stars + ' Stars</div></div>';
+                    '<div class="child-stars">⭐ ' + child.stars + ' Stars</div>' +
+                    streakHtml + badgeHtml + '</div>';
             });
             container.innerHTML = html;
         }
@@ -306,7 +314,7 @@
             data.children.forEach(function(child) {
                 if (child.pendingApprovals) {
                     child.pendingApprovals.forEach(function(a) {
-                        allApprovals.push({id: a.id, taskName: a.taskName, stars: a.stars, submittedAt: a.submittedAt, childId: child.id, childName: child.name, childAvatar: child.avatar});
+                        allApprovals.push({id: a.id, taskName: a.taskName, stars: a.stars, submittedAt: a.submittedAt, photo: a.photo, childId: child.id, childName: child.name, childAvatar: child.avatar});
                     });
                 }
                 if (child.pendingRewardClaims) {
@@ -323,13 +331,17 @@
             } else {
                 var html = '';
                 allApprovals.forEach(function(a) {
+                    var photoHtml = a.photo ? '<div style="margin:10px 0;"><img src="' + a.photo + '" style="max-width:150px;max-height:100px;border-radius:10px;cursor:pointer;" onclick="viewPhoto(this.src)"></div>' : '';
                     html += '<div class="approval-item">' +
                         '<div class="approval-avatar">' + a.childAvatar + '</div>' +
                         '<div class="approval-info">' +
                         '<div class="approval-child">' + a.childName + '</div>' +
                         '<div class="approval-task">Completed: ' + a.taskName + '</div>' +
                         '<div class="approval-stars">⭐ +' + a.stars + ' stars</div>' +
-                        '<div class="approval-time">' + formatTime(a.submittedAt) + '</div></div>' +
+                        photoHtml +
+                        '<div class="approval-time">' + formatTime(a.submittedAt) + '</div>' +
+                        '<input type="text" id="msg_' + a.id + '" placeholder="💌 Add encouragement message (optional)" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:10px;margin-top:8px;font-size:0.9rem;">' +
+                        '</div>' +
                         '<div class="approval-actions">' +
                         '<button class="btn btn-success btn-small" onclick="approveTask(\'' + a.childId + '\',' + a.id + ')">✓ Approve</button>' +
                         '<button class="btn btn-danger btn-small" onclick="rejectTask(\'' + a.childId + '\',' + a.id + ')">✗ Reject</button></div></div>';
@@ -355,6 +367,14 @@
                 });
                 rewardContainer.innerHTML = html;
             }
+        }
+        
+        function viewPhoto(src) {
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+            overlay.innerHTML = '<img src="' + src + '" style="max-width:90%;max-height:90%;border-radius:15px;"><button style="position:absolute;top:20px;right:20px;background:white;border:none;border-radius:50%;width:50px;height:50px;font-size:1.5rem;cursor:pointer;">✕</button>';
+            overlay.onclick = function() { overlay.remove(); };
+            document.body.appendChild(overlay);
         }
 
         function renderTasks() {
@@ -417,8 +437,10 @@
         }
 
         function approveTask(childId, approvalId) {
-            apiCall('approveTask', { approve: { childId: childId, approvalId: approvalId } }).then(function() {
-                showToast('Task approved! ⭐', 'success');
+            var msgInput = document.getElementById('msg_' + approvalId);
+            var message = msgInput ? msgInput.value.trim() : '';
+            apiCall('approveTask', { approve: { childId: childId, approvalId: approvalId, message: message } }).then(function() {
+                showToast('Task approved! ⭐' + (message ? ' 💌' : ''), 'success');
                 loadData();
             }).catch(function() { showToast('Error', 'error'); });
         }
@@ -440,6 +462,16 @@
         function rejectRewardClaim(childId, claimId) {
             apiCall('rejectRewardClaim', { reject: { childId: childId, claimId: claimId } }).then(function() {
                 showToast('Reward denied', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+        
+        function sendMessage() {
+            if (!selectedChildId) { showToast('Select a child first', 'error'); return; }
+            var text = prompt('💌 Enter a message for your child:');
+            if (!text || !text.trim()) return;
+            apiCall('sendMessage', { message: { childId: selectedChildId, text: text.trim() } }).then(function() {
+                showToast('Message sent! 💌', 'success');
                 loadData();
             }).catch(function() { showToast('Error', 'error'); });
         }

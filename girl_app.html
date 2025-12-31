@@ -86,7 +86,57 @@
         .progress-bar { height: 18px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, var(--yellow), #FFD700); border-radius: 10px; transition: width 0.5s ease; }
         .section-card { background: var(--white); border-radius: 30px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(255,105,180,0.15); }
+        .section-card.badges { border-top: 5px solid var(--yellow); }
+        .section-card.messages { border-top: 5px solid #9B59B6; }
         .section-title { font-family: 'Pacifico', cursive; font-size: 1.5rem; color: var(--kitty-pink); margin-bottom: 20px; }
+        
+        /* Streak Display */
+        .streak-display { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px; padding: 12px; background: rgba(255,100,0,0.2); border-radius: 15px; }
+        .streak-fire { font-size: 1.8rem; animation: flamePulse 0.5s ease-in-out infinite alternate; }
+        @keyframes flamePulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+        .streak-count { font-family: 'Pacifico', cursive; font-size: 1.3rem; color: #FF6B35; }
+        .streak-label { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
+        
+        /* Badges */
+        .badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .badge-item { text-align: center; padding: 10px 5px; background: #FFF0F5; border-radius: 15px; transition: all 0.3s ease; }
+        .badge-item.locked { opacity: 0.3; filter: grayscale(1); }
+        .badge-item.earned { background: linear-gradient(135deg, #FFE4EC, #FFD0DF); }
+        .badge-icon { font-size: 2rem; margin-bottom: 5px; }
+        .badge-name { font-size: 0.65rem; font-weight: 700; color: #333; line-height: 1.2; }
+        
+        /* Messages from Parent */
+        .messages-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; }
+        .message-item { padding: 12px 15px; background: linear-gradient(135deg, #FCE4EC, #F8BBD9); border-radius: 15px; border-left: 4px solid var(--kitty-pink); }
+        .message-text { font-size: 0.95rem; color: #333; font-style: italic; }
+        .message-meta { font-size: 0.75rem; color: #666; margin-top: 5px; }
+        .no-messages { text-align: center; color: #999; padding: 20px; font-style: italic; }
+        
+        /* Photo capture */
+        .photo-btn { background: rgba(155,89,182,0.2); border: 2px dashed #9B59B6; border-radius: 12px; padding: 10px 15px; color: #9B59B6; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 10px; transition: all 0.3s ease; }
+        .photo-preview { width: 100%; max-height: 150px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
+        .photo-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .photo-modal.hidden { display: none; }
+        .photo-modal video, .photo-modal canvas { max-width: 100%; max-height: 60vh; border-radius: 15px; }
+        .photo-modal-btns { display: flex; gap: 15px; margin-top: 20px; }
+        .photo-modal-btn { padding: 15px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+        .photo-modal-btn.capture { background: var(--kitty-pink); color: white; }
+        .photo-modal-btn.cancel { background: #666; color: white; }
+        .photo-modal-btn.use { background: #81C784; color: white; }
+        
+        /* Task submission modal */
+        .submit-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9998; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .submit-modal.hidden { display: none; }
+        .submit-modal-content { background: white; border-radius: 30px; padding: 25px; max-width: 350px; width: 100%; text-align: center; }
+        .submit-modal-title { font-family: 'Pacifico', cursive; font-size: 1.6rem; color: var(--kitty-pink); margin-bottom: 10px; }
+        .submit-modal-task { font-size: 1.1rem; color: #666; margin-bottom: 20px; }
+        .submit-modal-stars { font-size: 1.5rem; color: var(--yellow); margin-bottom: 20px; }
+        .submit-modal-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .submit-btn { padding: 12px 25px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 1rem; }
+        .submit-btn.confirm { background: #81C784; color: white; }
+        .submit-btn.photo { background: #9B59B6; color: white; }
+        .submit-btn.cancel { background: #ccc; color: #333; }
+        
         .task-list { display: grid; gap: 15px; }
         .task-item { display: flex; align-items: center; gap: 15px; padding: 18px; background: linear-gradient(135deg, #FFF0F5, #FFFFFF); border-radius: 20px; border: 3px solid var(--kitty-light); cursor: pointer; transition: all 0.3s ease; }
         .task-item:hover { transform: translateY(-3px); border-color: var(--kitty-pink); }
@@ -243,8 +293,26 @@
                     </div>
                     <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
                 </div>
+                <!-- Streak Display -->
+                <div class="streak-display" id="streakDisplay" style="display:none;">
+                    <span class="streak-fire">🔥</span>
+                    <span class="streak-count"><span id="streakCount">0</span> Day Streak!</span>
+                </div>
             </div>
         </div>
+        
+        <!-- Messages from Parent -->
+        <div class="section-card messages" id="messagesSection" style="display:none;">
+            <h2 class="section-title">💌 Messages from Parent</h2>
+            <div class="messages-list" id="messagesList"></div>
+        </div>
+        
+        <!-- Badges Section -->
+        <div class="section-card badges">
+            <h2 class="section-title">🏆 My Badges</h2>
+            <div class="badges-grid" id="badgesGrid"></div>
+        </div>
+        
         <div class="section-card">
             <h2 class="section-title">📝 Today's Tasks</h2>
             <div class="task-list" id="taskList"><div class="empty-state"><div class="emoji">🌸</div><p>Loading tasks...</p></div></div>
@@ -254,12 +322,46 @@
             <div class="rewards-grid" id="rewardsList"><div class="empty-state"><div class="emoji">💝</div></div></div>
         </div>
     </div>
+    
+    <!-- Task Submission Modal -->
+    <div class="submit-modal hidden" id="submitModal">
+        <div class="submit-modal-content">
+            <div class="submit-modal-title">Complete Task?</div>
+            <div class="submit-modal-task" id="submitModalTask">Task Name</div>
+            <div class="submit-modal-stars" id="submitModalStars">⭐ +5 Stars</div>
+            <img id="submitPhotoPreview" class="photo-preview" style="display:none;">
+            <div class="submit-modal-btns">
+                <button class="submit-btn photo" onclick="openCamera()">📸 Add Photo</button>
+                <button class="submit-btn confirm" onclick="confirmSubmit()">✓ Submit</button>
+                <button class="submit-btn cancel" onclick="closeSubmitModal()">✗ Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Photo Capture Modal -->
+    <div class="photo-modal hidden" id="photoModal">
+        <video id="photoVideo" autoplay playsinline></video>
+        <canvas id="photoCanvas" style="display:none;"></canvas>
+        <img id="photoCaptured" style="display:none; max-width:100%; max-height:60vh; border-radius:15px;">
+        <div class="photo-modal-btns" id="photoBtns">
+            <button class="photo-modal-btn capture" onclick="capturePhoto()">📸 Capture</button>
+            <button class="photo-modal-btn cancel" onclick="closePhotoModal()">✗ Cancel</button>
+        </div>
+        <div class="photo-modal-btns hidden" id="photoConfirmBtns">
+            <button class="photo-modal-btn use" onclick="usePhoto()">✓ Use Photo</button>
+            <button class="photo-modal-btn capture" onclick="retakePhoto()">🔄 Retake</button>
+            <button class="photo-modal-btn cancel" onclick="closePhotoModal()">✗ Cancel</button>
+        </div>
+    </div>
+    
     <div class="celebration-overlay hidden" id="celebration">
         <div class="celebration-content">
             <div class="celebration-character" id="celebrationChar">🎀</div>
             <div class="celebration-title" id="celebrationTitle">Wonderful!</div>
             <div class="celebration-message" id="celebrationMessage">You did amazing!</div>
             <div class="celebration-stars" id="celebrationStars">+5 ⭐ Stars!</div>
+            <div class="celebration-badges" id="celebrationBadges" style="display:none;"></div>
+            <div class="celebration-parent-msg" id="celebrationParentMsg" style="display:none; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 15px; font-style: italic;"></div>
             <button class="celebration-btn" onclick="closeCelebration()">Yay! 💖</button>
         </div>
     </div>
@@ -273,11 +375,42 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
         var CACHE_KEY = 'cubstars_girl_cache';
+        var childData = null;
+        var pendingCelebrations = [];
+        var isLoading = false;
+        var lastFetch = 0;
+        var pollInterval = null;
+        
+        // Photo/submission state
+        var currentSubmitTask = null;
+        var capturedPhoto = null;
+        var videoStream = null;
+        
+        // Badge definitions
+        var ALL_BADGES = {
+            first_task: { id: 'first_task', name: 'First Star', icon: '⭐', description: 'Complete your first task' },
+            five_tasks: { id: 'five_tasks', name: 'High Five', icon: '🖐️', description: 'Complete 5 tasks' },
+            ten_tasks: { id: 'ten_tasks', name: 'Super Ten', icon: '🔟', description: 'Complete 10 tasks' },
+            twenty_five_tasks: { id: 'twenty_five_tasks', name: 'Quarter Century', icon: '🏅', description: 'Complete 25 tasks' },
+            fifty_tasks: { id: 'fifty_tasks', name: 'Half Century', icon: '🥇', description: 'Complete 50 tasks' },
+            hundred_tasks: { id: 'hundred_tasks', name: 'Century Champion', icon: '💯', description: 'Complete 100 tasks' },
+            streak_3: { id: 'streak_3', name: 'On Fire', icon: '🔥', description: '3 day streak' },
+            streak_7: { id: 'streak_7', name: 'Week Warrior', icon: '📅', description: '7 day streak' },
+            streak_14: { id: 'streak_14', name: 'Fortnight Fighter', icon: '⚔️', description: '14 day streak' },
+            streak_30: { id: 'streak_30', name: 'Monthly Master', icon: '👑', description: '30 day streak' },
+            first_reward: { id: 'first_reward', name: 'Treat Time', icon: '🎁', description: 'Claim your first reward' },
+            five_rewards: { id: 'five_rewards', name: 'Reward Hunter', icon: '🎯', description: 'Claim 5 rewards' },
+            early_bird: { id: 'early_bird', name: 'Early Bird', icon: '🌅', description: 'Complete a task before 8am' },
+            night_owl: { id: 'night_owl', name: 'Night Owl', icon: '🦉', description: 'Complete a task after 8pm' },
+            ten_stars: { id: 'ten_stars', name: 'Star Collector', icon: '✨', description: 'Earn 10 stars total' },
+            fifty_stars: { id: 'fifty_stars', name: 'Star Hoarder', icon: '🌟', description: 'Earn 50 stars total' },
+            hundred_stars: { id: 'hundred_stars', name: 'Star Master', icon: '💫', description: 'Earn 100 stars total' }
+        };
         var childData = null;
         var pendingCelebrations = [];
         var isLoading = false;
@@ -443,8 +576,66 @@
             document.getElementById('nextReward').textContent = cheapestReward.name;
             document.getElementById('progressText').textContent = childData.stars + '/' + cheapestReward.cost;
             document.getElementById('progressFill').style.width = Math.min((childData.stars / cheapestReward.cost) * 100, 100) + '%';
+            renderStreak();
+            renderBadges();
+            renderMessages();
             renderTasks();
             renderRewards();
+        }
+
+        function renderStreak() {
+            var streakDisplay = document.getElementById('streakDisplay');
+            var streak = childData.streak || 0;
+            if (streak > 0) {
+                streakDisplay.style.display = 'flex';
+                document.getElementById('streakCount').textContent = streak;
+            } else {
+                streakDisplay.style.display = 'none';
+            }
+        }
+
+        function renderBadges() {
+            var container = document.getElementById('badgesGrid');
+            var earnedBadgeIds = (childData.badges || []).map(function(b) { return b.id; });
+            container.innerHTML = '';
+            
+            Object.keys(ALL_BADGES).forEach(function(badgeId) {
+                var badge = ALL_BADGES[badgeId];
+                var earned = earnedBadgeIds.indexOf(badgeId) !== -1;
+                
+                var div = document.createElement('div');
+                div.className = 'badge-item ' + (earned ? 'earned' : 'locked');
+                div.innerHTML = '<div class="badge-icon">' + badge.icon + '</div>' +
+                    '<div class="badge-name">' + badge.name + '</div>';
+                div.title = badge.description;
+                div.onclick = function() {
+                    showToast(badge.name + ': ' + badge.description, earned ? 'success' : 'info');
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function renderMessages() {
+            var section = document.getElementById('messagesSection');
+            var container = document.getElementById('messagesList');
+            var messages = childData.messages || [];
+            
+            if (messages.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            messages.slice(0, 5).forEach(function(msg) {
+                var div = document.createElement('div');
+                div.className = 'message-item';
+                var date = new Date(msg.date).toLocaleDateString();
+                div.innerHTML = '<div class="message-text">"' + msg.text + '"</div>' +
+                    '<div class="message-meta">' + (msg.taskName ? 'For: ' + msg.taskName + ' • ' : '') + date + '</div>';
+                container.appendChild(div);
+            });
         }
 
         function renderTasks() {
@@ -470,7 +661,7 @@
                 if (status === 'active') {
                     div.onclick = function() { 
                         div.classList.add('tapped');
-                        submitTask(task.id, task.name, task.stars); 
+                        openSubmitModal(task.id, task.name, task.stars); 
                     };
                 }
                 container.appendChild(div);
@@ -510,7 +701,30 @@
             });
         }
 
-        function submitTask(taskId, taskName, stars) {
+        // ========== TASK SUBMISSION MODAL ==========
+        function openSubmitModal(taskId, taskName, stars) {
+            currentSubmitTask = { id: taskId, name: taskName, stars: stars };
+            capturedPhoto = null;
+            document.getElementById('submitModalTask').textContent = taskName;
+            document.getElementById('submitModalStars').textContent = '⭐ +' + stars + ' Stars';
+            document.getElementById('submitPhotoPreview').style.display = 'none';
+            document.getElementById('submitModal').classList.remove('hidden');
+        }
+        
+        function closeSubmitModal() {
+            document.getElementById('submitModal').classList.add('hidden');
+            currentSubmitTask = null;
+            capturedPhoto = null;
+        }
+        
+        function confirmSubmit() {
+            if (!currentSubmitTask) return;
+            
+            closeSubmitModal();
+            submitTask(currentSubmitTask.id, currentSubmitTask.name, currentSubmitTask.stars, capturedPhoto);
+        }
+
+        function submitTask(taskId, taskName, stars, photo) {
             // Instant visual feedback - don't wait for API!
             
             // 1. Immediately mark as pending in local state
@@ -523,12 +737,87 @@
             // 3. Show celebration RIGHT NOW
             celebrateSubmission(taskName);
             
-            // 4. API call happens in background
-            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars } })
+            // 4. API call happens in background (with photo if provided)
+            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars, photo: photo || null } })
                 .catch(function(error) { 
                     console.error(error);
                     showToast('Error - please try again', 'error');
                 });
+        }
+
+        // ========== PHOTO CAPTURE ==========
+        function openCamera() {
+            document.getElementById('photoModal').classList.remove('hidden');
+            document.getElementById('photoBtns').classList.remove('hidden');
+            document.getElementById('photoConfirmBtns').classList.add('hidden');
+            document.getElementById('photoCaptured').style.display = 'none';
+            document.getElementById('photoVideo').style.display = 'block';
+            
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } 
+            })
+            .then(function(stream) {
+                videoStream = stream;
+                document.getElementById('photoVideo').srcObject = stream;
+            })
+            .catch(function(err) {
+                console.error('Camera error:', err);
+                showToast('Could not access camera', 'error');
+                closePhotoModal();
+            });
+        }
+        
+        function capturePhoto() {
+            var video = document.getElementById('photoVideo');
+            var canvas = document.getElementById('photoCanvas');
+            var captured = document.getElementById('photoCaptured');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            capturedPhoto = canvas.toDataURL('image/jpeg', 0.6);
+            captured.src = capturedPhoto;
+            
+            video.style.display = 'none';
+            captured.style.display = 'block';
+            document.getElementById('photoBtns').classList.add('hidden');
+            document.getElementById('photoConfirmBtns').classList.remove('hidden');
+            
+            if (videoStream) {
+                videoStream.getTracks().forEach(function(track) { track.stop(); });
+            }
+        }
+        
+        function retakePhoto() {
+            capturedPhoto = null;
+            document.getElementById('photoCaptured').style.display = 'none';
+            document.getElementById('photoVideo').style.display = 'block';
+            document.getElementById('photoBtns').classList.remove('hidden');
+            document.getElementById('photoConfirmBtns').classList.add('hidden');
+            
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function(stream) {
+                videoStream = stream;
+                document.getElementById('photoVideo').srcObject = stream;
+            });
+        }
+        
+        function usePhoto() {
+            if (capturedPhoto) {
+                var preview = document.getElementById('submitPhotoPreview');
+                preview.src = capturedPhoto;
+                preview.style.display = 'block';
+            }
+            closePhotoModal();
+        }
+        
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.add('hidden');
+            if (videoStream) {
+                videoStream.getTracks().forEach(function(track) { track.stop(); });
+                videoStream = null;
+            }
         }
 
         function celebrateSubmission(taskName) {
@@ -540,6 +829,10 @@
             
             // Quick burst of confetti
             createQuickConfetti();
+            
+            // Hide badges and parent msg
+            document.getElementById('celebrationBadges').style.display = 'none';
+            document.getElementById('celebrationParentMsg').style.display = 'none';
             
             // Show submission celebration
             document.getElementById('celebrationChar').textContent = '💌';
@@ -587,6 +880,10 @@
         function celebrateRewardClaim(rewardName, icon) {
             createQuickConfetti();
             
+            // Hide badges and parent msg
+            document.getElementById('celebrationBadges').style.display = 'none';
+            document.getElementById('celebrationParentMsg').style.display = 'none';
+            
             document.getElementById('celebrationChar').textContent = icon;
             document.getElementById('celebrationTitle').textContent = 'Requested!';
             document.getElementById('celebrationMessage').textContent = '"' + rewardName + '" sent to parent!';
@@ -604,7 +901,7 @@
             toast.className = 'toast-msg';
             toast.textContent = message;
             toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:' + 
-                (type === 'error' ? '#E74C3C' : '#FF69B4') + ';color:white;padding:12px 25px;border-radius:50px;font-weight:600;z-index:10000;';
+                (type === 'error' ? '#E74C3C' : type === 'info' ? '#3498DB' : '#FF69B4') + ';color:white;padding:12px 25px;border-radius:50px;font-weight:600;z-index:10000;';
             document.body.appendChild(toast);
             setTimeout(function() { toast.remove(); }, 3000);
         }
@@ -617,19 +914,48 @@
             playApprovalSound();
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             
+            // Reset badges and message display
+            document.getElementById('celebrationBadges').style.display = 'none';
+            document.getElementById('celebrationParentMsg').style.display = 'none';
+            
             var chars = ['🎀', '😺', '🐰', '💖', '🌸'];
             if (item.type === 'reward') {
-                celebrate(item.rewardIcon, 'Yay! 🎉', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' ⭐');
+                celebrate(item.rewardIcon, 'Yay! 🎉', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' ⭐', item.newBadges);
             } else {
-                celebrate(chars[Math.floor(Math.random() * chars.length)], 'Wonderful!', '"' + item.taskName + '" approved!', '+' + item.stars + ' ⭐ Stars!');
+                celebrate(chars[Math.floor(Math.random() * chars.length)], 'Wonderful!', '"' + item.taskName + '" approved!', '+' + item.stars + ' ⭐ Stars!', item.newBadges, item.message);
             }
         }
 
-        function celebrate(character, title, message, stars) {
+        function celebrate(character, title, message, stars, newBadges, parentMessage) {
             document.getElementById('celebrationChar').textContent = character;
             document.getElementById('celebrationTitle').textContent = title;
             document.getElementById('celebrationMessage').textContent = message;
             document.getElementById('celebrationStars').textContent = stars;
+            
+            // Show new badges if any
+            var badgesEl = document.getElementById('celebrationBadges');
+            if (newBadges && newBadges.length > 0) {
+                badgesEl.style.display = 'block';
+                badgesEl.innerHTML = '<div style="margin-top:15px;font-size:1.2rem;">🏆 NEW BADGE' + (newBadges.length > 1 ? 'S' : '') + '!</div>' +
+                    '<div style="display:flex;gap:15px;justify-content:center;margin-top:10px;">' +
+                    newBadges.map(function(b) {
+                        return '<div style="text-align:center;"><div style="font-size:2.5rem;">' + b.icon + '</div><div style="font-size:0.8rem;">' + b.name + '</div></div>';
+                    }).join('') + '</div>';
+                
+                playBadgeSound();
+            } else {
+                badgesEl.style.display = 'none';
+            }
+            
+            // Show parent message if any
+            var msgEl = document.getElementById('celebrationParentMsg');
+            if (parentMessage) {
+                msgEl.style.display = 'block';
+                msgEl.innerHTML = '💌 "' + parentMessage + '"';
+            } else {
+                msgEl.style.display = 'none';
+            }
+            
             document.getElementById('celebration').classList.remove('hidden');
             createHeartConfetti();
         }
@@ -666,11 +992,33 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            // Resume if suspended (required by browsers)
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
             return audioCtx;
+        }
+        
+        function playBadgeSound() {
+            try {
+                var ctx = getAudioContext();
+                var notes = [698, 880, 1047, 1319, 1568]; // F5, A5, C6, E6, G6 - magical sparkle
+                var now = ctx.currentTime;
+                
+                notes.forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.25, now + i * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.35);
+                    
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.35);
+                });
+            } catch(e) { console.log('Audio error:', e); }
         }
 
         function playSuccessSound() {
