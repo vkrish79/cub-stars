@@ -381,7 +381,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -481,30 +481,87 @@
         }
 
         // Optimized API call with timeout
-        function apiCall(action, params) {
+        function apiCall(action, params, usePost) {
             params = params || {};
             return new Promise(function(resolve, reject) {
-                var url = new URL(API_URL);
-                url.searchParams.append('action', action);
-                for (var key in params) {
-                    var value = params[key];
-                    url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
-                }
-                
                 var timeout = setTimeout(function() {
                     reject(new Error('Timeout'));
                 }, 15000);
                 
-                fetch(url.toString())
+                // Check if we need POST (for large data like photos)
+                var dataStr = '';
+                var hasLargeData = false;
+                for (var key in params) {
+                    var value = params[key];
+                    var str = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                    dataStr += str;
+                    if (str.length > 2000) {
+                        hasLargeData = true;
+                    }
+                }
+                
+                console.log('apiCall:', action, 'data size:', dataStr.length, 'usePost:', hasLargeData || usePost);
+                
+                if (hasLargeData || usePost) {
+                    // Use POST for large data - send as JSON in body
+                    var postData = { action: action };
+                    for (var key in params) {
+                        postData[key] = typeof params[key] === 'object' ? JSON.stringify(params[key]) : params[key];
+                    }
+                    
+                    // For Apps Script, we need to use a form-like approach
+                    var formBody = [];
+                    for (var key in postData) {
+                        formBody.push(encodeURIComponent(key) + '=' + encodeURIComponent(postData[key]));
+                    }
+                    
+                    fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: formBody.join('&')
+                    })
                     .then(function(r) { 
                         clearTimeout(timeout);
-                        return r.json(); 
+                        console.log('POST response status:', r.status);
+                        return r.text(); 
                     })
-                    .then(resolve)
+                    .then(function(text) {
+                        console.log('POST response:', text.substring(0, 200));
+                        try {
+                            resolve(JSON.parse(text));
+                        } catch(e) {
+                            // Might be JSONP response
+                            reject(new Error('Invalid JSON: ' + text.substring(0, 100)));
+                        }
+                    })
                     .catch(function(e) {
                         clearTimeout(timeout);
+                        console.error('POST error:', e);
                         reject(e);
                     });
+                } else {
+                    // Use GET for small data (faster, works better with CORS)
+                    var url = new URL(API_URL);
+                    url.searchParams.append('action', action);
+                    for (var key in params) {
+                        var value = params[key];
+                        url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
+                    }
+                    
+                    fetch(url.toString())
+                        .then(function(r) { 
+                            clearTimeout(timeout);
+                            return r.json(); 
+                        })
+                        .then(resolve)
+                        .catch(function(e) {
+                            clearTimeout(timeout);
+                            console.error('GET error:', e);
+                            reject(e);
+                        });
+                }
             });
         }
 
@@ -758,6 +815,8 @@
         }
 
         function submitTask(taskId, taskName, stars, photo) {
+            console.log('submitTask called:', taskId, taskName, stars, photo ? 'with photo (' + photo.length + ' chars)' : 'no photo');
+            
             // Instant visual feedback - don't wait for API!
             
             // 1. Immediately mark as pending in local state
@@ -770,16 +829,59 @@
             // 3. Show celebration RIGHT NOW
             celebrateSubmission(taskName);
             
-            // 4. API call happens in background (with photo if provided)
-            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars, photo: photo || null } })
+            // 4. API call - try with photo first, fallback to without photo
+            var approvalData = { 
+                childId: CHILD_ID, 
+                taskId: taskId, 
+                taskName: taskName, 
+                stars: stars, 
+                photo: photo || null 
+            };
+            
+            // If photo is very large (>50KB base64), skip it to avoid issues
+            if (photo && photo.length > 50000) {
+                console.log('Photo too large, skipping:', photo.length);
+                approvalData.photo = null;
+                showToast('Photo too large, submitting without', 'info');
+            }
+            
+            apiCall('submitForApproval', { approval: approvalData })
+                .then(function(result) {
+                    console.log('Submit success:', result);
+                    if (result.error) {
+                        showToast('Submitted but: ' + result.error, 'error');
+                    }
+                })
                 .catch(function(error) { 
-                    console.error(error);
-                    showToast('Error - please try again', 'error');
+                    console.error('Submit error:', error);
+                    
+                    // If failed with photo, retry without photo
+                    if (approvalData.photo) {
+                        console.log('Retrying without photo...');
+                        approvalData.photo = null;
+                        apiCall('submitForApproval', { approval: approvalData })
+                            .then(function(result) {
+                                console.log('Retry success:', result);
+                                showToast('Submitted without photo', 'info');
+                            })
+                            .catch(function(e) {
+                                console.error('Retry also failed:', e);
+                                showToast('Error - please try again', 'error');
+                            });
+                    } else {
+                        showToast('Error - please try again', 'error');
+                    }
                 });
         }
 
         // ========== PHOTO CAPTURE ==========
         function openCamera() {
+            // Check if camera API is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast('Camera not available on this device', 'error');
+                return;
+            }
+            
             document.getElementById('photoModal').classList.remove('hidden');
             document.getElementById('photoBtns').classList.remove('hidden');
             document.getElementById('photoConfirmBtns').classList.add('hidden');
@@ -787,15 +889,30 @@
             document.getElementById('photoVideo').style.display = 'block';
             
             navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } 
+                video: { 
+                    facingMode: 'environment', 
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 } 
+                } 
             })
             .then(function(stream) {
+                console.log('Camera access granted');
                 videoStream = stream;
-                document.getElementById('photoVideo').srcObject = stream;
+                var video = document.getElementById('photoVideo');
+                video.srcObject = stream;
+                video.onloadedmetadata = function() {
+                    console.log('Video ready:', video.videoWidth, 'x', video.videoHeight);
+                };
             })
             .catch(function(err) {
                 console.error('Camera error:', err);
-                showToast('Could not access camera', 'error');
+                var msg = 'Could not access camera';
+                if (err.name === 'NotAllowedError') {
+                    msg = 'Camera permission denied';
+                } else if (err.name === 'NotFoundError') {
+                    msg = 'No camera found';
+                }
+                showToast(msg, 'error');
                 closePhotoModal();
             });
         }
@@ -805,11 +922,33 @@
             var canvas = document.getElementById('photoCanvas');
             var captured = document.getElementById('photoCaptured');
             
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            console.log('Capturing photo, video dimensions:', video.videoWidth, video.videoHeight);
             
-            capturedPhoto = canvas.toDataURL('image/jpeg', 0.6);
+            // Resize to max 400px to keep file small
+            var maxSize = 400;
+            var width = video.videoWidth;
+            var height = video.videoHeight;
+            
+            if (width > height) {
+                if (width > maxSize) {
+                    height = Math.round(height * maxSize / width);
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = Math.round(width * maxSize / height);
+                    height = maxSize;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+            
+            // Compress to 0.5 quality for smaller size
+            capturedPhoto = canvas.toDataURL('image/jpeg', 0.5);
+            console.log('Photo captured, size:', capturedPhoto.length, 'chars');
+            
             captured.src = capturedPhoto;
             
             video.style.display = 'none';
@@ -932,11 +1071,15 @@
             var existing = document.querySelector('.toast-msg');
             if (existing) existing.remove();
             
+            var bgColor = '#27AE60'; // success (default)
+            if (type === 'error') bgColor = '#E74C3C';
+            else if (type === 'info') bgColor = '#3498DB';
+            
             var toast = document.createElement('div');
             toast.className = 'toast-msg';
             toast.textContent = message;
             toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:' + 
-                (type === 'error' ? '#E74C3C' : '#27AE60') + ';color:white;padding:12px 25px;border-radius:50px;font-weight:600;z-index:10000;';
+                bgColor + ';color:white;padding:12px 25px;border-radius:50px;font-weight:600;z-index:10000;';
             document.body.appendChild(toast);
             setTimeout(function() { toast.remove(); }, 3000);
         }
