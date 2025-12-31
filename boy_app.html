@@ -25,6 +25,49 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --spidey-red: #E23636; --spidey-blue: #2B3784; --hulk-green: #5C8A3F; --hulk-dark: #3D5C2A; --yellow: #FFD700; --dark: #1A1A2E; --white: #FFFFFF; }
+        
+        /* Cub Coin - Custom coin with embossed cub face */
+        .cub-coin {
+            display: inline-block;
+            width: 1.2em;
+            height: 1.2em;
+            background: linear-gradient(145deg, #ffd700 0%, #f4a020 30%, #cd8500 70%, #a06800 100%);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 
+                inset 2px 2px 4px rgba(255,255,255,0.5),
+                inset -1px -1px 3px rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3);
+            border: 2px solid #b8860b;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+        .cub-coin::before {
+            content: '🐻';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7em;
+            filter: sepia(1) saturate(0.3) brightness(0.8);
+            text-shadow: 0.5px 0.5px 0 rgba(139,90,43,0.5), -0.5px -0.5px 0 rgba(255,215,0,0.3);
+        }
+        .cub-coin-lg {
+            width: 1.5em;
+            height: 1.5em;
+        }
+        .cub-coin-lg::before {
+            font-size: 0.8em;
+        }
+        .cub-coin-xl {
+            width: 2.5em;
+            height: 2.5em;
+            border-width: 3px;
+        }
+        .cub-coin-xl::before {
+            font-size: 1.2em;
+        }
+        
         html, body { height: 100%; overflow-x: hidden; }
         body { 
             font-family: 'Nunito', sans-serif; 
@@ -290,7 +333,7 @@
                 <div class="hero-name" id="heroName">Loading...</div>
             </div>
             <div class="stars-display">
-                <div class="stars-count">🪙 <span id="totalStars">0</span></div>
+                <div class="stars-count"><span class="cub-coin cub-coin-xl"></span> <span id="totalStars">0</span></div>
                 <div class="stars-label">Power Coins</div>
                 <div class="progress-section">
                     <div class="progress-label">
@@ -334,7 +377,7 @@
         <div class="submit-modal-content">
             <div class="submit-modal-title">Complete Mission?</div>
             <div class="submit-modal-task" id="submitModalTask">Task Name</div>
-            <div class="submit-modal-stars" id="submitModalStars">🪙 +5 Coins</div>
+            <div class="submit-modal-stars" id="submitModalStars"><span class="cub-coin cub-coin-lg"></span> +5 Coins</div>
             <img id="submitPhotoPreview" class="photo-preview" style="display:none;">
             <div class="submit-modal-btns">
                 <button class="submit-btn photo" onclick="openCamera()">📸 Add Photo</button>
@@ -365,7 +408,7 @@
             <div class="celebration-hero" id="celebrationHero">🦸‍♂️</div>
             <div class="celebration-title" id="celebrationTitle">AWESOME!</div>
             <div class="celebration-message" id="celebrationMessage">You completed a mission!</div>
-            <div class="celebration-stars" id="celebrationStars">+5 🪙 Coins!</div>
+            <div class="celebration-stars" id="celebrationStars">+5 <span class="cub-coin cub-coin-lg"></span> Coins!</div>
             <div class="celebration-badges" id="celebrationBadges" style="display:none;"></div>
             <div class="celebration-parent-msg" id="celebrationParentMsg" style="display:none; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 15px; font-style: italic;"></div>
             <button class="celebration-btn" onclick="closeCelebration()">SMASH! 💥</button>
@@ -374,14 +417,14 @@
     <!-- Loading Indicator -->
     <div id="loader" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9998; justify-content:center; align-items:center;">
         <div style="background:white; padding:25px 40px; border-radius:20px; text-align:center;">
-            <div style="font-size:2.5rem; animation: spin 1s linear infinite;">🪙</div>
+            <div style="font-size:2.5rem; animation: spin 1s linear infinite;"><span class="cub-coin cub-coin-xl"></span></div>
             <div style="margin-top:10px; font-weight:600; color:#333;">Loading...</div>
         </div>
     </div>
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -399,7 +442,7 @@
         
         // Badge definitions (must match backend)
         var ALL_BADGES = {
-            first_task: { id: 'first_task', name: 'First Coin', icon: '🪙', description: 'Complete your first task' },
+            first_task: { id: 'first_task', name: 'First Coin', icon: '💰', description: 'Complete your first task' },
             five_tasks: { id: 'five_tasks', name: 'High Five', icon: '🖐️', description: 'Complete 5 tasks' },
             ten_tasks: { id: 'ten_tasks', name: 'Super Ten', icon: '🔟', description: 'Complete 10 tasks' },
             twenty_five_tasks: { id: 'twenty_five_tasks', name: 'Quarter Century', icon: '🏅', description: 'Complete 25 tasks' },
@@ -714,7 +757,7 @@
                 div.innerHTML = '<div class="task-checkbox">' + checkbox + '</div>' +
                     '<div class="task-info"><div class="task-name">' + task.category + ' ' + task.name + '</div>' +
                     '<div class="task-status">' + statusText + '</div></div>' +
-                    '<div class="task-stars">+' + task.stars + ' 🪙</div>';
+                    '<div class="task-stars">+' + task.stars + ' <span class="cub-coin"></span></div>';
                 
                 if (status === 'active') {
                     div.onclick = function() { 
@@ -753,7 +796,7 @@
                 
                 div.innerHTML = '<div class="reward-icon">' + reward.icon + '</div>' +
                     '<div class="reward-name">' + reward.name + '</div>' +
-                    '<div class="reward-cost">🪙 ' + reward.cost + '</div>';
+                    '<div class="reward-cost"><span class="cub-coin"></span> ' + reward.cost + '</div>';
                 div.appendChild(btn);
                 container.appendChild(div);
             });
@@ -764,7 +807,7 @@
             currentSubmitTask = { id: taskId, name: taskName, stars: stars };
             capturedPhoto = null;
             document.getElementById('submitModalTask').textContent = taskName;
-            document.getElementById('submitModalStars').textContent = '🪙 +' + stars + ' Coins';
+            document.getElementById('submitModalStars').innerHTML = '<span class="cub-coin cub-coin-lg"></span> +' + stars + ' Coins';
             document.getElementById('submitPhotoPreview').style.display = 'none';
             document.getElementById('submitModal').classList.remove('hidden');
         }
@@ -778,8 +821,14 @@
         function confirmSubmit() {
             if (!currentSubmitTask) return;
             
+            // Extract values BEFORE closing modal (which nullifies currentSubmitTask)
+            var taskId = currentSubmitTask.id;
+            var taskName = currentSubmitTask.name;
+            var taskStars = currentSubmitTask.stars;
+            var photo = capturedPhoto;
+            
             closeSubmitModal();
-            submitTask(currentSubmitTask.id, currentSubmitTask.name, currentSubmitTask.stars, capturedPhoto);
+            submitTask(taskId, taskName, taskStars, photo);
         }
 
         function submitTask(taskId, taskName, stars, photo) {
@@ -906,7 +955,7 @@
         }
 
         function createQuickConfetti() {
-            var items = ['🚀', '✨', '🪙', '💫', '🌟', '⚡'];
+            var items = ['🚀', '✨', '💰', '💫', '🌟', '⚡'];
             for (var i = 0; i < 20; i++) {
                 (function(index) {
                     setTimeout(function() {
@@ -979,9 +1028,9 @@
             document.getElementById('celebrationParentMsg').style.display = 'none';
             
             if (item.type === 'reward') {
-                celebrate(item.rewardIcon, 'REWARD UNLOCKED!', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' 🪙', item.newBadges);
+                celebrate(item.rewardIcon, 'REWARD UNLOCKED!', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' <span class="cub-coin"></span>', item.newBadges);
             } else {
-                celebrate('🦸‍♂️', 'AWESOME!', '"' + item.taskName + '" approved!', '+' + item.stars + ' 🪙 Coins!', item.newBadges, item.message);
+                celebrate('🦸‍♂️', 'AWESOME!', '"' + item.taskName + '" approved!', '+' + item.stars + ' <span class="cub-coin"></span> Coins!', item.newBadges, item.message);
             }
         }
 
@@ -989,7 +1038,7 @@
             document.getElementById('celebrationHero').textContent = hero;
             document.getElementById('celebrationTitle').textContent = title;
             document.getElementById('celebrationMessage').textContent = message;
-            document.getElementById('celebrationStars').textContent = stars;
+            document.getElementById('celebrationStars').innerHTML = stars;
             
             // Show new badges if any
             var badgesEl = document.getElementById('celebrationBadges');
@@ -1026,7 +1075,7 @@
         }
 
         function createConfetti() {
-            var items = ['🕷️', '💪', '🪙', '💥', '🔥', '⚡', '🦸‍♂️'];
+            var items = ['🕷️', '💪', '💰', '💥', '🔥', '⚡', '🦸‍♂️'];
             for (var i = 0; i < 30; i++) {
                 (function(index) {
                     setTimeout(function() {
