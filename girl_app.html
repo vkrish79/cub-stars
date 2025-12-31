@@ -284,8 +284,8 @@
                 <div class="kawaii-name" id="playerName">Loading...</div>
             </div>
             <div class="stars-display">
-                <div class="stars-count">⭐ <span id="totalStars">0</span></div>
-                <div class="stars-label">Magic Stars ✨</div>
+                <div class="stars-count">🪙 <span id="totalStars">0</span></div>
+                <div class="stars-label">Magic Coins ✨</div>
                 <div class="progress-section">
                     <div class="progress-label">
                         <span>Next Treat: <span id="nextReward">-</span></span>
@@ -328,12 +328,12 @@
         <div class="submit-modal-content">
             <div class="submit-modal-title">Complete Task?</div>
             <div class="submit-modal-task" id="submitModalTask">Task Name</div>
-            <div class="submit-modal-stars" id="submitModalStars">⭐ +5 Stars</div>
+            <div class="submit-modal-stars" id="submitModalStars">🪙 +5 Coins</div>
             <img id="submitPhotoPreview" class="photo-preview" style="display:none;">
             <div class="submit-modal-btns">
-                <button type="button" class="submit-btn photo" onclick="openCamera()">📸 Add Photo</button>
-                <button type="button" class="submit-btn confirm" onclick="confirmSubmit()">✓ Submit</button>
-                <button type="button" class="submit-btn cancel" onclick="closeSubmitModal()">✗ Cancel</button>
+                <button class="submit-btn photo" onclick="openCamera()">📸 Add Photo</button>
+                <button class="submit-btn confirm" onclick="confirmSubmit()">✓ Submit</button>
+                <button class="submit-btn cancel" onclick="closeSubmitModal()">✗ Cancel</button>
             </div>
         </div>
     </div>
@@ -359,7 +359,7 @@
             <div class="celebration-character" id="celebrationChar">🎀</div>
             <div class="celebration-title" id="celebrationTitle">Wonderful!</div>
             <div class="celebration-message" id="celebrationMessage">You did amazing!</div>
-            <div class="celebration-stars" id="celebrationStars">+5 ⭐ Stars!</div>
+            <div class="celebration-stars" id="celebrationStars">+5 🪙 Coins!</div>
             <div class="celebration-badges" id="celebrationBadges" style="display:none;"></div>
             <div class="celebration-parent-msg" id="celebrationParentMsg" style="display:none; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 15px; font-style: italic;"></div>
             <button class="celebration-btn" onclick="closeCelebration()">Yay! 💖</button>
@@ -375,7 +375,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
@@ -393,7 +393,7 @@
         
         // Badge definitions
         var ALL_BADGES = {
-            first_task: { id: 'first_task', name: 'First Star', icon: '⭐', description: 'Complete your first task' },
+            first_task: { id: 'first_task', name: 'First Coin', icon: '🪙', description: 'Complete your first task' },
             five_tasks: { id: 'five_tasks', name: 'High Five', icon: '🖐️', description: 'Complete 5 tasks' },
             ten_tasks: { id: 'ten_tasks', name: 'Super Ten', icon: '🔟', description: 'Complete 10 tasks' },
             twenty_five_tasks: { id: 'twenty_five_tasks', name: 'Quarter Century', icon: '🏅', description: 'Complete 25 tasks' },
@@ -498,16 +498,11 @@
                     }
                 }
                 
-                console.log('apiCall:', action, 'data size:', dataStr.length, 'usePost:', hasLargeData || usePost);
-                
                 if (hasLargeData || usePost) {
-                    // Use POST for large data - send as JSON in body
                     var postData = { action: action };
                     for (var key in params) {
                         postData[key] = typeof params[key] === 'object' ? JSON.stringify(params[key]) : params[key];
                     }
-                    
-                    // For Apps Script, we need to use a form-like approach
                     var formBody = [];
                     for (var key in postData) {
                         formBody.push(encodeURIComponent(key) + '=' + encodeURIComponent(postData[key]));
@@ -515,31 +510,22 @@
                     
                     fetch(API_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: formBody.join('&')
                     })
                     .then(function(r) { 
                         clearTimeout(timeout);
-                        console.log('POST response status:', r.status);
                         return r.text(); 
                     })
                     .then(function(text) {
-                        console.log('POST response:', text.substring(0, 200));
-                        try {
-                            resolve(JSON.parse(text));
-                        } catch(e) {
-                            reject(new Error('Invalid JSON: ' + text.substring(0, 100)));
-                        }
+                        try { resolve(JSON.parse(text)); } 
+                        catch(e) { reject(new Error('Invalid JSON')); }
                     })
                     .catch(function(e) {
                         clearTimeout(timeout);
-                        console.error('POST error:', e);
                         reject(e);
                     });
                 } else {
-                    // Use GET for small data (faster, works better with CORS)
                     var url = new URL(API_URL);
                     url.searchParams.append('action', action);
                     for (var key in params) {
@@ -555,7 +541,6 @@
                         .then(resolve)
                         .catch(function(e) {
                             clearTimeout(timeout);
-                            console.error('GET error:', e);
                             reject(e);
                         });
                 }
@@ -581,30 +566,17 @@
             lastFetch = Date.now();
             
             apiCall('getData').then(function(allData) {
-                console.log('Data loaded:', allData);
                 var newChildData = allData.children.find(function(c) { return c.id === CHILD_ID; });
                 if (newChildData) {
                     if (newChildData.newlyApproved && newChildData.newlyApproved.length > 0) {
                         newChildData.newlyApproved.forEach(function(item) {
-                            pendingCelebrations.push({
-                                taskName: item.taskName, 
-                                stars: item.stars, 
-                                type: 'task',
-                                newBadges: item.newBadges || [],
-                                message: item.message || null
-                            });
+                            pendingCelebrations.push({taskName: item.taskName, stars: item.stars, type: 'task'});
                         });
                         apiCall('clearNewlyApproved', { clear: { childId: CHILD_ID } });
                     }
                     if (newChildData.newlyApprovedRewards && newChildData.newlyApprovedRewards.length > 0) {
                         newChildData.newlyApprovedRewards.forEach(function(item) {
-                            pendingCelebrations.push({
-                                rewardName: item.rewardName, 
-                                rewardIcon: item.rewardIcon, 
-                                cost: item.cost, 
-                                type: 'reward',
-                                newBadges: item.newBadges || []
-                            });
+                            pendingCelebrations.push({rewardName: item.rewardName, rewardIcon: item.rewardIcon, cost: item.cost, type: 'reward'});
                         });
                         apiCall('clearNewlyApprovedRewards', { clear: { childId: CHILD_ID } });
                     }
@@ -613,11 +585,7 @@
                     saveToCache(newChildData);
                     
                     if (pendingCelebrations.length > 0) showNextCelebration();
-                    try {
-                        renderAll();
-                    } catch(e) {
-                        console.error('Render error:', e);
-                    }
+                    renderAll();
                 }
             }).catch(function(error) { 
                 console.error(error);
@@ -640,7 +608,6 @@
         });
 
         function renderAll() {
-            console.log('renderAll called, childData:', childData);
             if (!childData) return;
             document.getElementById('playerName').textContent = childData.name;
             document.getElementById('totalStars').textContent = childData.stars;
@@ -719,18 +686,29 @@
                 return;
             }
             container.innerHTML = '';
-            childData.tasks.forEach(function(task) {
+            
+            // Filter: only show active and pending tasks (hide completed)
+            var visibleTasks = childData.tasks.filter(function(task) {
+                return !task.completed;
+            });
+            
+            if (visibleTasks.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="emoji">🎉</div><p>All tasks complete! Amazing!</p></div>';
+                return;
+            }
+            
+            visibleTasks.forEach(function(task) {
                 var isPending = childData.pendingApprovals && childData.pendingApprovals.some(function(a) { return a.taskId === task.id; });
-                var status = task.completed ? 'completed' : isPending ? 'pending' : 'active';
-                var statusText = status === 'completed' ? '✨ Completed!' : status === 'pending' ? '💭 Waiting for parent...' : 'Tap when done!';
-                var checkbox = status === 'completed' ? '✓' : status === 'pending' ? '⏳' : '';
+                var status = isPending ? 'pending' : 'active';
+                var statusText = status === 'pending' ? '💭 Waiting for parent...' : 'Tap when done!';
+                var checkbox = status === 'pending' ? '⏳' : '';
                 
                 var div = document.createElement('div');
                 div.className = 'task-item ' + status;
                 div.innerHTML = '<div class="task-checkbox">' + checkbox + '</div>' +
                     '<div class="task-info"><div class="task-name">' + task.category + ' ' + task.name + '</div>' +
                     '<div class="task-status">' + statusText + '</div></div>' +
-                    '<div class="task-stars">+' + task.stars + ' ⭐</div>';
+                    '<div class="task-stars">+' + task.stars + ' 🪙</div>';
                 
                 if (status === 'active') {
                     div.onclick = function() { 
@@ -769,7 +747,7 @@
                 
                 div.innerHTML = '<div class="reward-icon">' + reward.icon + '</div>' +
                     '<div class="reward-name">' + reward.name + '</div>' +
-                    '<div class="reward-cost">⭐ ' + reward.cost + '</div>';
+                    '<div class="reward-cost">🪙 ' + reward.cost + '</div>';
                 div.appendChild(btn);
                 container.appendChild(div);
             });
@@ -780,7 +758,7 @@
             currentSubmitTask = { id: taskId, name: taskName, stars: stars };
             capturedPhoto = null;
             document.getElementById('submitModalTask').textContent = taskName;
-            document.getElementById('submitModalStars').textContent = '⭐ +' + stars + ' Stars';
+            document.getElementById('submitModalStars').textContent = '🪙 +' + stars + ' Coins';
             document.getElementById('submitPhotoPreview').style.display = 'none';
             document.getElementById('submitModal').classList.remove('hidden');
         }
@@ -792,24 +770,13 @@
         }
         
         function confirmSubmit() {
-            console.log('confirmSubmit called', currentSubmitTask);
-            if (!currentSubmitTask) {
-                console.log('No currentSubmitTask!');
-                return;
-            }
-            
-            var taskId = currentSubmitTask.id;
-            var taskName = currentSubmitTask.name;
-            var taskStars = currentSubmitTask.stars;
-            var photo = capturedPhoto;
+            if (!currentSubmitTask) return;
             
             closeSubmitModal();
-            submitTask(taskId, taskName, taskStars, photo);
+            submitTask(currentSubmitTask.id, currentSubmitTask.name, currentSubmitTask.stars, capturedPhoto);
         }
 
         function submitTask(taskId, taskName, stars, photo) {
-            console.log('submitTask called:', taskId, taskName, stars, photo ? 'with photo (' + photo.length + ' chars)' : 'no photo');
-            
             // Instant visual feedback - don't wait for API!
             
             // 1. Immediately mark as pending in local state
@@ -822,59 +789,16 @@
             // 3. Show celebration RIGHT NOW
             celebrateSubmission(taskName);
             
-            // 4. API call - try with photo first, fallback to without photo
-            var approvalData = { 
-                childId: CHILD_ID, 
-                taskId: taskId, 
-                taskName: taskName, 
-                stars: stars, 
-                photo: photo || null 
-            };
-            
-            // If photo is very large (>50KB base64), skip it to avoid issues
-            if (photo && photo.length > 50000) {
-                console.log('Photo too large, skipping:', photo.length);
-                approvalData.photo = null;
-                showToast('Photo too large, submitting without', 'info');
-            }
-            
-            apiCall('submitForApproval', { approval: approvalData })
-                .then(function(result) {
-                    console.log('Submit success:', result);
-                    if (result.error) {
-                        showToast('Submitted but: ' + result.error, 'error');
-                    }
-                })
+            // 4. API call happens in background (with photo if provided)
+            apiCall('submitForApproval', { approval: { childId: CHILD_ID, taskId: taskId, taskName: taskName, stars: stars, photo: photo || null } })
                 .catch(function(error) { 
-                    console.error('Submit error:', error);
-                    
-                    // If failed with photo, retry without photo
-                    if (approvalData.photo) {
-                        console.log('Retrying without photo...');
-                        approvalData.photo = null;
-                        apiCall('submitForApproval', { approval: approvalData })
-                            .then(function(result) {
-                                console.log('Retry success:', result);
-                                showToast('Submitted without photo', 'info');
-                            })
-                            .catch(function(e) {
-                                console.error('Retry also failed:', e);
-                                showToast('Error - please try again', 'error');
-                            });
-                    } else {
-                        showToast('Error - please try again', 'error');
-                    }
+                    console.error(error);
+                    showToast('Error - please try again', 'error');
                 });
         }
 
         // ========== PHOTO CAPTURE ==========
         function openCamera() {
-            // Check if camera API is available
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showToast('Camera not available on this device', 'error');
-                return;
-            }
-            
             document.getElementById('photoModal').classList.remove('hidden');
             document.getElementById('photoBtns').classList.remove('hidden');
             document.getElementById('photoConfirmBtns').classList.add('hidden');
@@ -882,30 +806,15 @@
             document.getElementById('photoVideo').style.display = 'block';
             
             navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: 'environment', 
-                    width: { ideal: 640 }, 
-                    height: { ideal: 480 } 
-                } 
+                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } 
             })
             .then(function(stream) {
-                console.log('Camera access granted');
                 videoStream = stream;
-                var video = document.getElementById('photoVideo');
-                video.srcObject = stream;
-                video.onloadedmetadata = function() {
-                    console.log('Video ready:', video.videoWidth, 'x', video.videoHeight);
-                };
+                document.getElementById('photoVideo').srcObject = stream;
             })
             .catch(function(err) {
                 console.error('Camera error:', err);
-                var msg = 'Could not access camera';
-                if (err.name === 'NotAllowedError') {
-                    msg = 'Camera permission denied';
-                } else if (err.name === 'NotFoundError') {
-                    msg = 'No camera found';
-                }
-                showToast(msg, 'error');
+                showToast('Could not access camera', 'error');
                 closePhotoModal();
             });
         }
@@ -915,33 +824,11 @@
             var canvas = document.getElementById('photoCanvas');
             var captured = document.getElementById('photoCaptured');
             
-            console.log('Capturing photo, video dimensions:', video.videoWidth, video.videoHeight);
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
             
-            // Resize to max 400px to keep file small
-            var maxSize = 400;
-            var width = video.videoWidth;
-            var height = video.videoHeight;
-            
-            if (width > height) {
-                if (width > maxSize) {
-                    height = Math.round(height * maxSize / width);
-                    width = maxSize;
-                }
-            } else {
-                if (height > maxSize) {
-                    width = Math.round(width * maxSize / height);
-                    height = maxSize;
-                }
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            canvas.getContext('2d').drawImage(video, 0, 0, width, height);
-            
-            // Compress to 0.5 quality for smaller size
-            capturedPhoto = canvas.toDataURL('image/jpeg', 0.5);
-            console.log('Photo captured, size:', capturedPhoto.length, 'chars');
-            
+            capturedPhoto = canvas.toDataURL('image/jpeg', 0.6);
             captured.src = capturedPhoto;
             
             video.style.display = 'none';
@@ -1011,7 +898,7 @@
         }
 
         function createQuickConfetti() {
-            var items = ['💌', '✨', '⭐', '💫', '🌟', '💖'];
+            var items = ['💌', '✨', '🪙', '💫', '🌟', '💖'];
             for (var i = 0; i < 20; i++) {
                 (function(index) {
                     setTimeout(function() {
@@ -1085,9 +972,9 @@
             
             var chars = ['🎀', '😺', '🐰', '💖', '🌸'];
             if (item.type === 'reward') {
-                celebrate(item.rewardIcon, 'Yay! 🎉', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' ⭐', item.newBadges);
+                celebrate(item.rewardIcon, 'Yay! 🎉', 'Enjoy your ' + item.rewardName + '!', '-' + item.cost + ' 🪙', item.newBadges);
             } else {
-                celebrate(chars[Math.floor(Math.random() * chars.length)], 'Wonderful!', '"' + item.taskName + '" approved!', '+' + item.stars + ' ⭐ Stars!', item.newBadges, item.message);
+                celebrate(chars[Math.floor(Math.random() * chars.length)], 'Wonderful!', '"' + item.taskName + '" approved!', '+' + item.stars + ' 🪙 Coins!', item.newBadges, item.message);
             }
         }
 
@@ -1131,7 +1018,7 @@
         }
 
         function createHeartConfetti() {
-            var hearts = ['💕', '💖', '💗', '💝', '🌸', '✨', '🎀', '⭐'];
+            var hearts = ['💕', '💖', '💗', '💝', '🌸', '✨', '🎀', '🪙'];
             for (var i = 0; i < 30; i++) {
                 (function(index) {
                     setTimeout(function() {
