@@ -324,16 +324,16 @@
     </div>
     
     <!-- Task Submission Modal -->
-    <div class="submit-modal hidden" id="submitModal">
-        <div class="submit-modal-content">
+    <div class="submit-modal hidden" id="submitModal" onclick="closeSubmitModal()">
+        <div class="submit-modal-content" onclick="event.stopPropagation()">
             <div class="submit-modal-title">Complete Task?</div>
             <div class="submit-modal-task" id="submitModalTask">Task Name</div>
             <div class="submit-modal-stars" id="submitModalStars">⭐ +5 Stars</div>
             <img id="submitPhotoPreview" class="photo-preview" style="display:none;">
             <div class="submit-modal-btns">
-                <button class="submit-btn photo" onclick="openCamera()">📸 Add Photo</button>
-                <button class="submit-btn confirm" onclick="confirmSubmit()">✓ Submit</button>
-                <button class="submit-btn cancel" onclick="closeSubmitModal()">✗ Cancel</button>
+                <button type="button" class="submit-btn photo" onclick="openCamera()">📸 Add Photo</button>
+                <button type="button" class="submit-btn confirm" onclick="confirmSubmit()">✓ Submit</button>
+                <button type="button" class="submit-btn cancel" onclick="closeSubmitModal()">✗ Cancel</button>
             </div>
         </div>
     </div>
@@ -375,7 +375,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
@@ -718,10 +718,19 @@
         }
         
         function confirmSubmit() {
-            if (!currentSubmitTask) return;
+            console.log('confirmSubmit called', currentSubmitTask);
+            if (!currentSubmitTask) {
+                console.log('No currentSubmitTask!');
+                return;
+            }
+            
+            var taskId = currentSubmitTask.id;
+            var taskName = currentSubmitTask.name;
+            var taskStars = currentSubmitTask.stars;
+            var photo = capturedPhoto;
             
             closeSubmitModal();
-            submitTask(currentSubmitTask.id, currentSubmitTask.name, currentSubmitTask.stars, capturedPhoto);
+            submitTask(taskId, taskName, taskStars, photo);
         }
 
         function submitTask(taskId, taskName, stars, photo) {
