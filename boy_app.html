@@ -42,7 +42,7 @@
             overscroll-behavior: none;
         }
         .container { max-width: 500px; margin: 0 auto; }
-        .hero-header { background: linear-gradient(135deg, var(--spidey-red) 0%, var(--spidey-blue) 100%); border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .hero-header { background: linear-gradient(135deg, var(--spidey-red) 0%, var(--spidey-blue) 100%); border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
         .hero-title { font-family: 'Bangers', cursive; font-size: 2.2rem; color: var(--white); text-align: center; letter-spacing: 3px; text-shadow: 3px 3px 0 rgba(0,0,0,0.3); }
         .hero-name { font-family: 'Bangers', cursive; font-size: 1.8rem; color: var(--yellow); text-align: center; margin-top: 10px; }
         .stars-display { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; margin-top: 20px; text-align: center; }
@@ -99,13 +99,97 @@
         .celebration-btn { padding: 18px 50px; border: none; border-radius: 50px; font-family: 'Bangers', cursive; font-size: 1.5rem; cursor: pointer; background: linear-gradient(135deg, var(--spidey-red), var(--hulk-green)); color: white; }
         .confetti { position: fixed; font-size: 2rem; top: -50px; animation: confettiFall 3s ease-out forwards; z-index: 10000; pointer-events: none; }
         @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        /* TABLET LAYOUT - 768px and above */
+        @media (min-width: 768px) {
+            body { padding: 30px; }
+            .container { max-width: 900px; }
+            
+            .hero-header { 
+                padding: 35px 45px; 
+                border-radius: 30px;
+                flex-direction: row;
+                align-items: center;
+                gap: 40px;
+            }
+            .hero-header > div:first-child { flex: 1; }
+            .hero-title { font-size: 3rem; text-align: left; }
+            .hero-name { font-size: 2.2rem; text-align: left; }
+            .stars-display { 
+                margin-top: 0; 
+                min-width: 280px;
+                padding: 25px 35px;
+            }
+            .stars-count { font-size: 5rem; }
+            .stars-label { font-size: 1.3rem; }
+            
+            .section-card { 
+                padding: 35px; 
+                border-radius: 30px;
+                margin-bottom: 30px;
+            }
+            .section-title { font-size: 2rem; margin-bottom: 25px; }
+            
+            /* 2-column task grid for tablets */
+            .task-list { 
+                display: grid; 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 20px; 
+            }
+            .task-item { 
+                padding: 20px 25px; 
+                border-radius: 20px;
+                border-width: 4px;
+            }
+            .task-checkbox { width: 55px; height: 55px; font-size: 1.8rem; }
+            .task-name { font-size: 1.25rem; }
+            .task-status { font-size: 0.95rem; }
+            .task-stars { font-size: 1.4rem; }
+            
+            /* 3-column rewards grid for tablets */
+            .rewards-grid { 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 20px; 
+            }
+            .reward-card { 
+                padding: 30px 20px; 
+                border-radius: 25px;
+                border-width: 4px;
+            }
+            .reward-icon { font-size: 4rem; margin-bottom: 15px; }
+            .reward-name { font-size: 1.1rem; margin-bottom: 12px; }
+            .reward-cost { font-size: 1.3rem; margin-bottom: 15px; }
+            .claim-btn { padding: 15px; font-size: 1rem; border-radius: 30px; }
+            
+            .celebration-hero { font-size: 10rem; }
+            .celebration-title { font-size: 4rem; }
+            .celebration-message { font-size: 2rem; }
+            .celebration-stars { font-size: 2.5rem; }
+            .celebration-btn { padding: 22px 60px; font-size: 1.8rem; }
+            
+            .confetti { font-size: 3rem; }
+        }
+
+        /* LARGE TABLET / LANDSCAPE - 1024px and above */
+        @media (min-width: 1024px) {
+            .container { max-width: 1100px; }
+            
+            .hero-header { padding: 40px 60px; gap: 60px; }
+            .hero-title { font-size: 3.5rem; }
+            .stars-display { min-width: 320px; }
+            
+            .task-list { grid-template-columns: repeat(2, 1fr); gap: 25px; }
+            .rewards-grid { grid-template-columns: repeat(4, 1fr); gap: 25px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="hero-header">
-            <div class="hero-title">🕸️ CUB STARS! 💪</div>
-            <div class="hero-name" id="heroName">Loading...</div>
+            <div>
+                <div class="hero-title">🕸️ CUB STARS! 💪</div>
+                <div class="hero-name" id="heroName">Loading...</div>
+            </div>
             <div class="stars-display">
                 <div class="stars-count">⭐ <span id="totalStars">0</span></div>
                 <div class="stars-label">Power Stars</div>
@@ -146,7 +230,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -518,40 +602,77 @@
         loadData();
 
         // Sound effect using Web Audio API
+        var audioCtx = null;
+        
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Resume if suspended (required by browsers)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
         function playSuccessSound() {
             try {
-                var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                var ctx = getAudioContext();
+                
+                // Create nodes
                 var osc = ctx.createOscillator();
                 var gain = ctx.createGain();
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(523, ctx.currentTime); // C5
-                osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
-                osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2); // G5
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.4);
-            } catch(e) {}
+                
+                // Sound: C5 -> E5 -> G5 (happy ascending)
+                var now = ctx.currentTime;
+                osc.frequency.setValueAtTime(523, now);      // C5
+                osc.frequency.setValueAtTime(659, now + 0.1); // E5
+                osc.frequency.setValueAtTime(784, now + 0.2); // G5
+                
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } catch(e) { console.log('Audio error:', e); }
         }
 
         function playApprovalSound() {
             try {
-                var ctx = new (window.AudioContext || window.webkitAudioContext)();
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(392, ctx.currentTime); // G4
-                osc.frequency.setValueAtTime(523, ctx.currentTime + 0.15); // C5
-                osc.frequency.setValueAtTime(659, ctx.currentTime + 0.3); // E5
-                osc.frequency.setValueAtTime(784, ctx.currentTime + 0.45); // G5
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.6);
-            } catch(e) {}
+                var ctx = getAudioContext();
+                
+                // Play a triumphant chord sequence
+                var notes = [392, 523, 659, 784]; // G4, C5, E5, G5
+                var now = ctx.currentTime;
+                
+                notes.forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.3, now + i * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.3);
+                    
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.3);
+                });
+            } catch(e) { console.log('Audio error:', e); }
         }
+
+        // Unlock audio on first tap anywhere
+        document.addEventListener('touchstart', function unlockAudio() {
+            getAudioContext();
+            document.removeEventListener('touchstart', unlockAudio);
+        }, { once: true });
+        
+        document.addEventListener('click', function unlockAudio() {
+            getAudioContext();
+            document.removeEventListener('click', unlockAudio);
+        }, { once: true });
     </script>
 </body>
 </html>
