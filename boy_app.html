@@ -330,8 +330,8 @@
     </div>
     
     <!-- Task Submission Modal -->
-    <div class="submit-modal hidden" id="submitModal" onclick="closeSubmitModal()">
-        <div class="submit-modal-content" onclick="event.stopPropagation()">
+    <div class="submit-modal hidden" id="submitModal">
+        <div class="submit-modal-content">
             <div class="submit-modal-title">Complete Mission?</div>
             <div class="submit-modal-task" id="submitModalTask">Task Name</div>
             <div class="submit-modal-stars" id="submitModalStars">⭐ +5 Stars</div>
@@ -381,7 +381,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -529,18 +529,31 @@
             lastFetch = Date.now();
             
             apiCall('getData').then(function(allData) {
+                console.log('Data loaded:', allData);
                 var newChildData = allData.children.find(function(c) { return c.id === CHILD_ID; });
                 if (newChildData) {
                     // Check for newly approved items
                     if (newChildData.newlyApproved && newChildData.newlyApproved.length > 0) {
                         newChildData.newlyApproved.forEach(function(item) {
-                            pendingCelebrations.push({taskName: item.taskName, stars: item.stars, type: 'task'});
+                            pendingCelebrations.push({
+                                taskName: item.taskName, 
+                                stars: item.stars, 
+                                type: 'task',
+                                newBadges: item.newBadges || [],
+                                message: item.message || null
+                            });
                         });
                         apiCall('clearNewlyApproved', { clear: { childId: CHILD_ID } });
                     }
                     if (newChildData.newlyApprovedRewards && newChildData.newlyApprovedRewards.length > 0) {
                         newChildData.newlyApprovedRewards.forEach(function(item) {
-                            pendingCelebrations.push({rewardName: item.rewardName, rewardIcon: item.rewardIcon, cost: item.cost, type: 'reward'});
+                            pendingCelebrations.push({
+                                rewardName: item.rewardName, 
+                                rewardIcon: item.rewardIcon, 
+                                cost: item.cost, 
+                                type: 'reward',
+                                newBadges: item.newBadges || []
+                            });
                         });
                         apiCall('clearNewlyApprovedRewards', { clear: { childId: CHILD_ID } });
                     }
@@ -549,7 +562,11 @@
                     saveToCache(newChildData);
                     
                     if (pendingCelebrations.length > 0) showNextCelebration();
-                    renderAll();
+                    try {
+                        renderAll();
+                    } catch(e) {
+                        console.error('Render error:', e);
+                    }
                 }
             }).catch(function(error) { 
                 console.error(error);
@@ -573,6 +590,7 @@
         });
 
         function renderAll() {
+            console.log('renderAll called, childData:', childData);
             if (!childData) return;
             document.getElementById('heroName').textContent = childData.name;
             document.getElementById('totalStars').textContent = childData.stars;
