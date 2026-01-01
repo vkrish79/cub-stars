@@ -291,10 +291,21 @@
                 <div class="form-section">
                     <h4 style="margin-bottom: 15px;">➕ Add New Reward</h4>
                     <div class="form-grid">
-                        <div class="form-group"><label>Reward Name</label><input type="text" id="newRewardName" placeholder="e.g., Ice cream treat"></div>
-                        <div class="form-group"><label>Cost ⭐</label><select id="newRewardCost"><option value="10">10 Stars</option><option value="20">20 Stars</option><option value="30" selected>30 Stars</option><option value="50">50 Stars</option><option value="100">100 Stars</option></select></div>
-                        <div class="form-group"><label>Icon</label><select id="newRewardIcon"><option value="🍦">🍦 Ice Cream</option><option value="🎮">🎮 Game Time</option><option value="📺">📺 TV Time</option><option value="🎬">🎬 Movie</option><option value="🛍️">🛍️ Shopping</option><option value="🎢">🎢 Adventure</option><option value="🧸">🧸 Toy</option><option value="📱">📱 Screen Time</option></select></div>
+                        <div class="form-group"><label>Reward Name</label><input type="text" id="newRewardName" placeholder="e.g., Baked potato, Movie night" oninput="suggestRewardIcon()"></div>
+                        <div class="form-group"><label>Cost 🪙</label><select id="newRewardCost"><option value="10">10 Coins</option><option value="20">20 Coins</option><option value="30" selected>30 Coins</option><option value="50">50 Coins</option><option value="100">100 Coins</option></select></div>
+                        <div class="form-group">
+                            <label>Icon <span id="iconSuggestion" style="font-size:0.8rem;color:#888;"></span></label>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <span id="selectedIcon" style="font-size:2rem;min-width:45px;text-align:center;">🎁</span>
+                                <input type="text" id="newRewardIcon" value="🎁" style="width:60px;text-align:center;font-size:1.5rem;" maxlength="2">
+                            </div>
+                        </div>
                         <div class="form-group" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="addReward()">Add Reward</button></div>
+                    </div>
+                    <!-- Quick Icon Suggestions -->
+                    <div id="iconSuggestions" style="margin-top:10px;padding:10px;background:#f8f9ff;border-radius:10px;display:none;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:8px;">✨ Suggested icons (tap to select):</div>
+                        <div id="suggestedIcons" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                     </div>
                 </div>
                 <div class="item-grid" id="rewardList" style="margin-top: 20px;"></div>
@@ -879,11 +890,168 @@
             }).catch(function() { showToast('Error', 'error'); });
         }
 
+        // ========== SMART ICON SUGGESTIONS ==========
+        var ICON_KEYWORDS = {
+            // Food & Drinks
+            'ice cream': '🍦', 'icecream': '🍦', 'gelato': '🍦', 'sundae': '🍨',
+            'pizza': '🍕', 'burger': '🍔', 'hamburger': '🍔', 'fries': '🍟', 'french fries': '🍟',
+            'cake': '🎂', 'birthday cake': '🎂', 'cupcake': '🧁', 'donut': '🍩', 'doughnut': '🍩',
+            'cookie': '🍪', 'cookies': '🍪', 'biscuit': '🍪',
+            'candy': '🍬', 'sweets': '🍬', 'chocolate': '🍫', 'lollipop': '🍭',
+            'potato': '🥔', 'baked potato': '🥔', 'fries': '🍟',
+            'chicken': '🍗', 'nuggets': '🍗', 'drumstick': '🍗',
+            'hotdog': '🌭', 'hot dog': '🌭', 'sandwich': '🥪', 'sub': '🥪',
+            'taco': '🌮', 'burrito': '🌯', 'nachos': '🧀',
+            'sushi': '🍣', 'ramen': '🍜', 'noodles': '🍜', 'pasta': '🍝', 'spaghetti': '🍝',
+            'popcorn': '🍿', 'pretzel': '🥨',
+            'fruit': '🍎', 'apple': '🍎', 'banana': '🍌', 'orange': '🍊', 'strawberry': '🍓', 'watermelon': '🍉', 'grapes': '🍇',
+            'juice': '🧃', 'smoothie': '🥤', 'milkshake': '🥤', 'soda': '🥤', 'drink': '🥤',
+            'breakfast': '🥞', 'pancake': '🥞', 'pancakes': '🥞', 'waffle': '🧇', 'waffles': '🧇',
+            'egg': '🍳', 'eggs': '🍳', 'bacon': '🥓',
+            'cereal': '🥣', 'oatmeal': '🥣',
+            
+            // Entertainment
+            'movie': '🎬', 'film': '🎬', 'cinema': '🎬', 'theater': '🎭',
+            'tv': '📺', 'television': '📺', 'show': '📺', 'cartoon': '📺', 'netflix': '📺', 'youtube': '📺',
+            'game': '🎮', 'gaming': '🎮', 'video game': '🎮', 'videogame': '🎮', 'xbox': '🎮', 'playstation': '🎮', 'nintendo': '🎮', 'switch': '🎮', 'roblox': '🎮', 'minecraft': '🎮', 'fortnite': '🎮',
+            'phone': '📱', 'screen': '📱', 'ipad': '📱', 'tablet': '📱', 'screen time': '📱',
+            'music': '🎵', 'song': '🎵', 'spotify': '🎵', 'concert': '🎤',
+            'book': '📚', 'reading': '📖', 'story': '📖', 'comic': '📚',
+            'lego': '🧱', 'blocks': '🧱', 'building': '🧱',
+            
+            // Activities & Outings
+            'park': '🏞️', 'playground': '🛝', 'slide': '🛝', 'swing': '🛝',
+            'pool': '🏊', 'swimming': '🏊', 'swim': '🏊', 'water park': '🏊',
+            'beach': '🏖️', 'ocean': '🌊', 'sand': '🏖️',
+            'zoo': '🦁', 'animal': '🐾', 'animals': '🐾', 'aquarium': '🐠',
+            'museum': '🏛️', 'science': '🔬',
+            'amusement': '🎢', 'theme park': '🎢', 'roller coaster': '🎠', 'ride': '🎠', 'carnival': '🎡', 'fair': '🎡',
+            'bowling': '🎳', 'arcade': '🕹️',
+            'bike': '🚲', 'bicycle': '🚲', 'cycling': '🚲', 'scooter': '🛴',
+            'camping': '🏕️', 'camp': '🏕️', 'tent': '⛺', 'hiking': '🥾', 'hike': '🥾',
+            'picnic': '🧺', 'bbq': '🍖', 'barbecue': '🍖',
+            'sleepover': '🛏️', 'slumber party': '🛏️', 'pajama': '🛏️',
+            'party': '🎉', 'birthday': '🎂', 'celebration': '🎊',
+            'trampoline': '🤸', 'bounce': '🤸', 'jumping': '🤸',
+            
+            // Shopping & Toys
+            'toy': '🧸', 'toys': '🧸', 'teddy': '🧸', 'stuffed': '🧸', 'plush': '🧸',
+            'shopping': '🛍️', 'shop': '🛍️', 'store': '🛒', 'mall': '🛍️', 'buy': '🛍️',
+            'clothes': '👕', 'shirt': '👕', 'dress': '👗', 'shoes': '👟',
+            'doll': '🪆', 'barbie': '🪆', 'action figure': '🦸',
+            'car': '🚗', 'truck': '🚚', 'train': '🚂', 'plane': '✈️', 'airplane': '✈️',
+            'robot': '🤖', 'dinosaur': '🦕', 'dino': '🦖',
+            'ball': '⚽', 'soccer': '⚽', 'football': '🏈', 'basketball': '🏀', 'baseball': '⚾',
+            'art': '🎨', 'paint': '🎨', 'drawing': '✏️', 'craft': '✂️', 'crafts': '✂️',
+            'sticker': '⭐', 'stickers': '⭐',
+            
+            // Time & Privileges
+            'late': '🌙', 'bedtime': '🌙', 'bed time': '🌙', 'stay up': '🌙', 'night': '🌙',
+            'skip': '⏭️', 'no chores': '🙅', 'day off': '😎', 'lazy': '😴', 'rest': '😴', 'sleep in': '😴',
+            'extra': '➕', 'bonus': '🌟', 'special': '✨',
+            'friend': '👫', 'friends': '👫', 'playdate': '👫', 'play date': '👫', 'hangout': '👫',
+            'alone time': '🧘', 'quiet time': '🧘', 'me time': '🧘',
+            'choose': '👆', 'pick': '👆', 'choice': '👆', 'decide': '👆',
+            'allowance': '💵', 'money': '💵', 'cash': '💵', 'dollar': '💵',
+            
+            // Pets
+            'pet': '🐕', 'dog': '🐕', 'puppy': '🐶', 'cat': '🐈', 'kitten': '🐱', 'fish': '🐟', 'hamster': '🐹', 'rabbit': '🐰', 'bird': '🐦',
+            
+            // Misc
+            'surprise': '🎁', 'present': '🎁', 'gift': '🎁',
+            'star': '⭐', 'trophy': '🏆', 'medal': '🏅', 'crown': '👑', 'prize': '🏆',
+            'heart': '❤️', 'love': '❤️', 'hug': '🤗',
+            'adventure': '🗺️', 'explore': '🔍', 'treasure': '💎',
+            'magic': '✨', 'fairy': '🧚', 'unicorn': '🦄', 'rainbow': '🌈', 'princess': '👸', 'prince': '🤴', 'superhero': '🦸',
+            'dance': '💃', 'dancing': '💃', 'ballet': '🩰',
+            'spa': '💆', 'massage': '💆', 'nail': '💅', 'nails': '💅', 'makeover': '💄',
+            'haircut': '💇', 'hair': '💇',
+            'restaurant': '🍽️', 'dinner': '🍽️', 'lunch': '🍽️', 'eat out': '🍽️', 'dining': '🍽️'
+        };
+        
+        function suggestRewardIcon() {
+            var name = document.getElementById('newRewardName').value.toLowerCase().trim();
+            var suggestionsDiv = document.getElementById('iconSuggestions');
+            var suggestedIconsDiv = document.getElementById('suggestedIcons');
+            var iconInput = document.getElementById('newRewardIcon');
+            var selectedIconSpan = document.getElementById('selectedIcon');
+            
+            if (name.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            var matches = [];
+            var words = name.split(/\s+/);
+            
+            // Check for keyword matches
+            for (var keyword in ICON_KEYWORDS) {
+                if (name.includes(keyword)) {
+                    var icon = ICON_KEYWORDS[keyword];
+                    if (matches.indexOf(icon) === -1) {
+                        matches.push(icon);
+                    }
+                }
+            }
+            
+            // Also check individual words
+            words.forEach(function(word) {
+                if (word.length > 2) {
+                    for (var keyword in ICON_KEYWORDS) {
+                        if (keyword.includes(word) || word.includes(keyword.split(' ')[0])) {
+                            var icon = ICON_KEYWORDS[keyword];
+                            if (matches.indexOf(icon) === -1) {
+                                matches.push(icon);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Limit to top 8 suggestions
+            matches = matches.slice(0, 8);
+            
+            if (matches.length > 0) {
+                // Auto-select first match
+                iconInput.value = matches[0];
+                selectedIconSpan.textContent = matches[0];
+                
+                // Show suggestions
+                suggestedIconsDiv.innerHTML = matches.map(function(icon) {
+                    return '<button type="button" onclick="selectRewardIcon(\'' + icon + '\')" style="font-size:1.8rem;padding:8px 12px;border:2px solid #ddd;border-radius:10px;background:white;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor=\'#667eea\';this.style.transform=\'scale(1.1)\'" onmouseout="this.style.borderColor=\'#ddd\';this.style.transform=\'scale(1)\'">' + icon + '</button>';
+                }).join('');
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+        
+        function selectRewardIcon(icon) {
+            document.getElementById('newRewardIcon').value = icon;
+            document.getElementById('selectedIcon').textContent = icon;
+            // Highlight selected
+            showToast('Icon selected: ' + icon, 'success');
+        }
+        
+        // Update icon display when manually typing
+        document.addEventListener('DOMContentLoaded', function() {
+            var iconInput = document.getElementById('newRewardIcon');
+            if (iconInput) {
+                iconInput.addEventListener('input', function() {
+                    document.getElementById('selectedIcon').textContent = this.value || '🎁';
+                });
+            }
+        });
+        
         function addReward() {
             var name = document.getElementById('newRewardName').value.trim();
             if (!name || !selectedChildId) { showToast('Enter reward name and select child', 'error'); return; }
-            apiCall('addReward', { reward: { childId: selectedChildId, name: name, cost: parseInt(document.getElementById('newRewardCost').value), icon: document.getElementById('newRewardIcon').value } }).then(function() {
+            var icon = document.getElementById('newRewardIcon').value || '🎁';
+            apiCall('addReward', { reward: { childId: selectedChildId, name: name, cost: parseInt(document.getElementById('newRewardCost').value), icon: icon } }).then(function() {
                 document.getElementById('newRewardName').value = '';
+                document.getElementById('newRewardIcon').value = '🎁';
+                document.getElementById('selectedIcon').textContent = '🎁';
+                document.getElementById('iconSuggestions').style.display = 'none';
                 showToast('Reward added! 🎁', 'success');
                 loadData();
             }).catch(function() { showToast('Error', 'error'); });
