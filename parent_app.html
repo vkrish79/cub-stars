@@ -62,6 +62,16 @@
         .approval-time { font-size: 0.8rem; color: #999; margin-top: 5px; }
         .approval-actions { display: flex; gap: 10px; }
         .btn { padding: 10px 20px; border: none; border-radius: 10px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .quick-bonus-btn { background: linear-gradient(135deg, #F39C12, #E67E22); color: white; padding: 12px 18px; font-size: 1rem; }
+        .quick-bonus-btn:active { transform: scale(0.95); }
+        .bonus-special { background: linear-gradient(135deg, #9B59B6, #8E44AD); }
+        .task-template-btn { background: #f0f4ff; border: 2px solid #667eea; color: #667eea; padding: 8px 12px; font-size: 0.85rem; border-radius: 20px; margin: 3px; }
+        .task-template-btn:hover { background: #667eea; color: white; }
+        .recurring-toggle { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .toggle-switch { position: relative; width: 50px; height: 26px; background: #ccc; border-radius: 13px; cursor: pointer; transition: 0.3s; }
+        .toggle-switch.active { background: #4CAF50; }
+        .toggle-switch::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+        .toggle-switch.active::after { left: 26px; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-primary { background: var(--primary); color: white; }
@@ -202,13 +212,39 @@
         <div class="tab-panel" id="managePanel">
             <div class="card">
                 <h2 class="card-title">📋 Tasks for <span id="taskChildName">Select Child</span></h2>
+                
+                <!-- Task Templates -->
+                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9ff; border-radius: 12px;">
+                    <h4 style="margin-bottom: 10px;">📝 Quick Templates</h4>
+                    <div style="display: flex; flex-wrap: wrap;">
+                        <button class="task-template-btn" onclick="useTemplate('Make the bed', 2, '🏠')">🛏️ Make bed</button>
+                        <button class="task-template-btn" onclick="useTemplate('Brush teeth', 2, '💪')">🦷 Brush teeth</button>
+                        <button class="task-template-btn" onclick="useTemplate('Clean room', 5, '🏠')">🧹 Clean room</button>
+                        <button class="task-template-btn" onclick="useTemplate('Do homework', 5, '📚')">📖 Homework</button>
+                        <button class="task-template-btn" onclick="useTemplate('Read for 20 mins', 3, '📚')">📚 Reading</button>
+                        <button class="task-template-btn" onclick="useTemplate('Help with dishes', 3, '🏠')">🍽️ Dishes</button>
+                        <button class="task-template-btn" onclick="useTemplate('Exercise/Play outside', 3, '💪')">🏃 Exercise</button>
+                        <button class="task-template-btn" onclick="useTemplate('Practice instrument', 5, '🎨')">🎵 Practice</button>
+                        <button class="task-template-btn" onclick="useTemplate('Be kind to sibling', 3, '🤝')">💕 Kindness</button>
+                        <button class="task-template-btn" onclick="useTemplate('No screen time today', 10, '💪')">📵 No screens</button>
+                    </div>
+                </div>
+                
                 <div class="form-section">
                     <h4 style="margin-bottom: 15px;">➕ Add New Task</h4>
                     <div class="form-grid">
                         <div class="form-group"><label>Task Name</label><input type="text" id="newTaskName" placeholder="e.g., Make the bed"></div>
-                        <div class="form-group"><label>Stars ⭐</label><select id="newTaskStars"><option value="1">1 Star</option><option value="2">2 Stars</option><option value="3" selected>3 Stars</option><option value="5">5 Stars</option><option value="10">10 Stars</option></select></div>
+                        <div class="form-group"><label>Coins 🪙</label><select id="newTaskStars"><option value="1">1 Coin</option><option value="2">2 Coins</option><option value="3" selected>3 Coins</option><option value="5">5 Coins</option><option value="10">10 Coins</option></select></div>
                         <div class="form-group"><label>Category</label><select id="newTaskCategory"><option value="🏠">🏠 Home</option><option value="📚">📚 Learning</option><option value="💪">💪 Health</option><option value="🤝">🤝 Kindness</option><option value="🎨">🎨 Creative</option></select></div>
-                        <div class="form-group" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="addTask()">Add Task</button></div>
+                    </div>
+                    <!-- Recurring Task Option -->
+                    <div class="recurring-toggle">
+                        <div id="recurringToggle" class="toggle-switch" onclick="toggleRecurring()"></div>
+                        <span>🔄 Recurring Task (resets daily)</span>
+                        <input type="hidden" id="isRecurring" value="false">
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-primary" onclick="addTask()">Add Task</button>
                     </div>
                 </div>
                 <div class="item-grid" id="taskList" style="margin-top: 20px;"></div>
@@ -233,10 +269,24 @@
             <div class="card">
                 <h2 class="card-title">🪙 Manage Coins for <span id="starsChildName">Select Child</span></h2>
                 <p style="color: #666; margin-bottom: 15px;">Add bonus coins or remove coins as needed.</p>
+                
+                <!-- Quick Bonus Coins -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">⚡ Quick Bonus Coins</h4>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn quick-bonus-btn" onclick="quickBonus(1)">+1 🪙</button>
+                        <button class="btn quick-bonus-btn" onclick="quickBonus(3)">+3 🪙</button>
+                        <button class="btn quick-bonus-btn" onclick="quickBonus(5)">+5 🪙</button>
+                        <button class="btn quick-bonus-btn" onclick="quickBonus(10)">+10 🪙</button>
+                        <button class="btn quick-bonus-btn bonus-special" onclick="quickBonus(25)">+25 🌟</button>
+                    </div>
+                </div>
+                
                 <div class="stars-control">
+                    <span style="font-weight: 500;">Custom:</span>
                     <input type="number" id="starsAmount" value="5" min="1" max="100">
-                    <button class="btn btn-success" onclick="addStars()">➕ Add Coins</button>
-                    <button class="btn btn-danger" onclick="removeStars()">➖ Remove Coins</button>
+                    <button class="btn btn-success" onclick="addStars()">➕ Add</button>
+                    <button class="btn btn-danger" onclick="removeStars()">➖ Remove</button>
                 </div>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
                     <h4 style="margin-bottom: 15px;">💌 Send Encouragement</h4>
@@ -546,11 +596,12 @@
             }
             var html = '';
             child.tasks.forEach(function(t) {
+                var recurringBadge = t.recurring ? '<span style="background:#E8F5E9;color:#4CAF50;padding:2px 8px;border-radius:10px;font-size:0.75rem;margin-left:5px;">🔄 Daily</span>' : '';
                 html += '<div class="item-row">' +
                     '<div class="item-icon">' + t.category + '</div>' +
-                    '<div class="item-info"><div class="item-name">' + t.name + '</div>' +
+                    '<div class="item-info"><div class="item-name">' + t.name + recurringBadge + '</div>' +
                     '<div class="item-meta">' + (t.completed ? '✅ Completed' : '⏳ Pending') + '</div></div>' +
-                    '<div class="item-value">⭐ ' + t.stars + '</div>' +
+                    '<div class="item-value">🪙 ' + t.stars + '</div>' +
                     (t.completed ? '<button class="btn btn-small" style="background:#FFC107;color:#333;" onclick="resetTask(' + t.id + ')">🔄 Reset</button>' : '') +
                     '<button class="delete-btn" onclick="deleteTask(' + t.id + ')">🗑️</button></div>';
             });
@@ -639,11 +690,41 @@
         function addTask() {
             var name = document.getElementById('newTaskName').value.trim();
             if (!name || !selectedChildId) { showToast('Enter task name and select child', 'error'); return; }
-            apiCall('addTask', { task: { childId: selectedChildId, name: name, stars: parseInt(document.getElementById('newTaskStars').value), category: document.getElementById('newTaskCategory').value } }).then(function() {
+            var isRecurring = document.getElementById('isRecurring').value === 'true';
+            apiCall('addTask', { task: { childId: selectedChildId, name: name, stars: parseInt(document.getElementById('newTaskStars').value), category: document.getElementById('newTaskCategory').value, recurring: isRecurring } }).then(function() {
                 document.getElementById('newTaskName').value = '';
-                showToast('Task added! 📋', 'success');
+                document.getElementById('isRecurring').value = 'false';
+                document.getElementById('recurringToggle').classList.remove('active');
+                showToast('Task added! 📋' + (isRecurring ? ' (Recurring)' : ''), 'success');
                 loadData();
             }).catch(function() { showToast('Error', 'error'); });
+        }
+        
+        function quickBonus(amount) {
+            if (!selectedChildId) { showToast('Select a child first', 'error'); return; }
+            apiCall('addStars', { stars: { childId: selectedChildId, amount: amount } }).then(function() {
+                showToast('Bonus! +' + amount + ' coins! 🎉', 'success');
+                loadData();
+            }).catch(function() { showToast('Error', 'error'); });
+        }
+        
+        function useTemplate(name, stars, category) {
+            document.getElementById('newTaskName').value = name;
+            document.getElementById('newTaskStars').value = stars;
+            document.getElementById('newTaskCategory').value = category;
+            showToast('Template loaded! Edit or click Add Task', 'success');
+        }
+        
+        function toggleRecurring() {
+            var toggle = document.getElementById('recurringToggle');
+            var input = document.getElementById('isRecurring');
+            if (input.value === 'true') {
+                input.value = 'false';
+                toggle.classList.remove('active');
+            } else {
+                input.value = 'true';
+                toggle.classList.add('active');
+            }
         }
 
         function deleteTask(taskId) {
