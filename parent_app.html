@@ -83,6 +83,78 @@
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
         .empty-state { text-align: center; padding: 40px; color: #999; }
         .empty-state .emoji { font-size: 4rem; margin-bottom: 15px; }
+        /* Coupon Styles */
+        .coupon-card {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
+            border: 3px dashed #FFD700;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.2);
+        }
+        .coupon-card::before, .coupon-card::after {
+            content: '✂️';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+        .coupon-card::before { left: -12px; }
+        .coupon-card::after { right: -12px; }
+        .coupon-card-header {
+            font-size: 0.85rem;
+            color: #E74C3C;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .coupon-card-icon {
+            font-size: 3rem;
+            margin: 10px 0;
+        }
+        .coupon-card-reward {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2C3E50;
+            margin: 10px 0;
+        }
+        .coupon-card-child {
+            font-size: 1.1rem;
+            color: #27AE60;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .coupon-card-date {
+            font-size: 0.85rem;
+            color: #888;
+            margin: 5px 0;
+        }
+        .coupon-card-id {
+            font-size: 0.75rem;
+            color: #aaa;
+            font-family: monospace;
+            margin: 5px 0 15px;
+        }
+        .coupon-card-divider {
+            border-top: 2px dashed #ddd;
+            margin: 15px 0;
+        }
+        .redeem-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(39,174,96,0.3);
+            transition: transform 0.2s;
+        }
+        .redeem-btn:active { transform: scale(0.95); }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
         .refresh-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
@@ -217,7 +289,7 @@
     <div class="toast" id="toast"></div>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CACHE_KEY = 'cubstars_parent_cache';
@@ -438,16 +510,16 @@
             
             var html = '';
             pendingCoupons.forEach(function(coupon, index) {
-                var sentDate = new Date(coupon.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                var sentDate = new Date(coupon.sentAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                 html += '<div class="coupon-card">';
-                html += '<div class="coupon-card-header">';
-                html += '<div class="coupon-card-reward">' + coupon.rewardIcon + ' ' + coupon.rewardName + '</div>';
-                html += '</div>';
-                html += '<div class="coupon-card-child">From: ' + coupon.childName + ' • Sent: ' + sentDate + '</div>';
+                html += '<div class="coupon-card-header">🎉 CUB STARS REWARD COUPON 🎉</div>';
+                html += '<div class="coupon-card-icon">' + coupon.rewardIcon + '</div>';
+                html += '<div class="coupon-card-reward">' + coupon.rewardName + '</div>';
+                html += '<div class="coupon-card-divider"></div>';
+                html += '<div class="coupon-card-child">🏆 ' + coupon.childName + '</div>';
+                html += '<div class="coupon-card-date">Sent: ' + sentDate + '</div>';
                 html += '<div class="coupon-card-id">' + coupon.id + '</div>';
-                html += '<div class="coupon-card-actions">';
                 html += '<button class="redeem-btn" onclick="redeemCoupon(' + index + ')">✅ Mark as Redeemed</button>';
-                html += '</div>';
                 html += '</div>';
             });
             couponList.innerHTML = html;
