@@ -554,7 +554,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'girl1';
@@ -920,8 +920,10 @@
                 var canAfford = childData.stars >= reward.cost;
                 
                 // Check if this reward has been redeemed (has unused coupons)
+                // Filter out coupons that have already been sent to parent
+                var sentCouponIds = JSON.parse(localStorage.getItem('cubstars_sent_coupon_ids') || '[]');
                 var redeemedCoupon = childData.redeemedRewards && childData.redeemedRewards.find(function(r) { 
-                    return r.rewardName === reward.name && !r.used; 
+                    return r.rewardName === reward.name && !r.used && sentCouponIds.indexOf(r.id) === -1; 
                 });
                 
                 var cardClass = redeemedCoupon ? 'redeemed' : isPending ? 'pending-claim' : canAfford ? 'affordable' : '';
@@ -982,6 +984,11 @@
                 };
                 pendingCoupons.push(couponToSend);
                 localStorage.setItem('cubstars_pending_coupons', JSON.stringify(pendingCoupons));
+                
+                // Track sent coupon IDs so they don't show again
+                var sentCouponIds = JSON.parse(localStorage.getItem('cubstars_sent_coupon_ids') || '[]');
+                sentCouponIds.push(currentCouponToSend.id);
+                localStorage.setItem('cubstars_sent_coupon_ids', JSON.stringify(sentCouponIds));
                 
                 if (childData.redeemedRewards) {
                     childData.redeemedRewards = childData.redeemedRewards.filter(function(r) {
