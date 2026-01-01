@@ -560,7 +560,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -973,28 +973,34 @@
         }
         
         function sendCouponToParent() {
-            alert('sendCouponToParent called! currentCouponToSend: ' + (currentCouponToSend ? currentCouponToSend.id : 'null'));
             if (!currentCouponToSend) return;
-            var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
-            var couponToSend = {
-                id: currentCouponToSend.id,
-                rewardName: currentCouponToSend.rewardName,
-                rewardIcon: currentCouponToSend.rewardIcon,
-                redeemedAt: currentCouponToSend.redeemedAt,
-                childName: childData.name,
-                childId: CHILD_ID,
-                sentAt: new Date().toISOString()
-            };
-            pendingCoupons.push(couponToSend);
-            localStorage.setItem('cubstars_pending_coupons', JSON.stringify(pendingCoupons));
-            childData.redeemedRewards = childData.redeemedRewards.filter(function(r) {
-                return r.id !== currentCouponToSend.id;
-            });
-            saveData();
-            closeCouponPreview();
-            playSound('complete');
-            showToast('📨 Coupon sent to parent!', 'success');
-            renderRewards();
+            try {
+                var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
+                var couponToSend = {
+                    id: currentCouponToSend.id,
+                    rewardName: currentCouponToSend.rewardName,
+                    rewardIcon: currentCouponToSend.rewardIcon,
+                    redeemedAt: currentCouponToSend.redeemedAt,
+                    childName: childData.name,
+                    childId: CHILD_ID,
+                    sentAt: new Date().toISOString()
+                };
+                pendingCoupons.push(couponToSend);
+                localStorage.setItem('cubstars_pending_coupons', JSON.stringify(pendingCoupons));
+                
+                if (childData.redeemedRewards) {
+                    childData.redeemedRewards = childData.redeemedRewards.filter(function(r) {
+                        return r.id !== currentCouponToSend.id;
+                    });
+                }
+                saveData();
+                closeCouponPreview();
+                playSound('complete');
+                showToast('📨 Coupon sent to parent!', 'success');
+                renderRewards();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         // ========== TASK SUBMISSION MODAL ==========
