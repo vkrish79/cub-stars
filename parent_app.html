@@ -94,64 +94,110 @@
         .empty-state { text-align: center; padding: 40px; color: #999; }
         .empty-state .emoji { font-size: 4rem; margin-bottom: 15px; }
         /* Coupon Styles */
+        /* Colorful Coupon Cards - inspired by kid coupon design */
         .coupon-card {
-            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
-            border: 2px dashed #FFD700;
+            background: white;
             border-radius: 12px;
-            padding: 12px 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+        .coupon-card-top {
+            padding: 15px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .coupon-card-top::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: repeating-linear-gradient(90deg, currentColor 0, currentColor 8px, transparent 8px, transparent 12px);
+            opacity: 0.3;
+        }
+        .coupon-header {
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .coupon-reward {
+            font-size: 1.4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+            line-height: 1.2;
+        }
+        .coupon-subtitle {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #444;
+            margin-top: 4px;
+        }
+        .coupon-card-bottom {
+            background: #f8f8f8;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px dashed #ddd;
+        }
+        .coupon-child-info {
             display: flex;
             align-items: center;
-            gap: 12px;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(255,215,0,0.15);
+            gap: 8px;
         }
-        .coupon-card-icon {
-            font-size: 2rem;
-            flex-shrink: 0;
+        .coupon-child-avatar {
+            font-size: 1.5rem;
         }
-        .coupon-card-info {
-            flex: 1;
-            min-width: 0;
-            text-align: left;
-        }
-        .coupon-card-reward {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #2C3E50;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .coupon-card-child {
-            font-size: 0.85rem;
-            color: #27AE60;
+        .coupon-child-name {
             font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
         }
-        .coupon-card-date {
+        .coupon-date {
             font-size: 0.75rem;
             color: #888;
         }
         .redeem-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: linear-gradient(135deg, #27AE60, #2ECC71);
             color: white;
             border: none;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 700;
             cursor: pointer;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .redeem-btn:active { transform: scale(0.95); }
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(39,174,96,0.3);
+            box-shadow: 0 3px 10px rgba(39,174,96,0.3);
             transition: transform 0.2s;
         }
         .redeem-btn:active { transform: scale(0.95); }
+        /* Coupon color themes */
+        .coupon-teal .coupon-card-top { background: linear-gradient(135deg, #26a69a, #4db6ac); color: white; }
+        .coupon-teal .coupon-header, .coupon-teal .coupon-reward, .coupon-teal .coupon-subtitle { color: white; }
+        .coupon-pink .coupon-card-top { background: linear-gradient(135deg, #ec407a, #f48fb1); color: white; }
+        .coupon-pink .coupon-header, .coupon-pink .coupon-reward, .coupon-pink .coupon-subtitle { color: white; }
+        .coupon-blue .coupon-card-top { background: linear-gradient(135deg, #42a5f5, #64b5f6); color: white; }
+        .coupon-blue .coupon-header, .coupon-blue .coupon-reward, .coupon-blue .coupon-subtitle { color: white; }
+        .coupon-yellow .coupon-card-top { background: linear-gradient(135deg, #ffca28, #ffd54f); }
+        .coupon-yellow .coupon-header, .coupon-yellow .coupon-subtitle { color: #5d4037; }
+        .coupon-yellow .coupon-reward { color: #3e2723; }
+        .coupon-green .coupon-card-top { background: linear-gradient(135deg, #66bb6a, #81c784); color: white; }
+        .coupon-green .coupon-header, .coupon-green .coupon-reward, .coupon-green .coupon-subtitle { color: white; }
+        .coupon-purple .coupon-card-top { background: linear-gradient(135deg, #ab47bc, #ce93d8); color: white; }
+        .coupon-purple .coupon-header, .coupon-purple .coupon-reward, .coupon-purple .coupon-subtitle { color: white; }
+        .coupon-stripes {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 30px;
+            background: repeating-linear-gradient(0deg, rgba(255,255,255,0.3) 0px, rgba(255,255,255,0.3) 4px, transparent 4px, transparent 8px);
+        }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
         .refresh-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
@@ -569,6 +615,9 @@
             var couponList = document.getElementById('couponList');
             var couponCount = document.getElementById('couponCount');
             
+            // Color themes that rotate
+            var colorThemes = ['coupon-teal', 'coupon-pink', 'coupon-blue', 'coupon-yellow', 'coupon-green', 'coupon-purple'];
+            
             couponCount.textContent = pendingCoupons.length;
             couponCount.style.display = pendingCoupons.length > 0 ? 'inline-block' : 'none';
             
@@ -580,14 +629,23 @@
             var html = '';
             pendingCoupons.forEach(function(coupon, index) {
                 var sentDate = new Date(coupon.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                html += '<div class="coupon-card">';
-                html += '<div class="coupon-card-icon">' + coupon.rewardIcon + '</div>';
-                html += '<div class="coupon-card-info">';
-                html += '<div class="coupon-card-reward">' + coupon.rewardName + '</div>';
-                html += '<div class="coupon-card-child">' + coupon.childName + '</div>';
-                html += '<div class="coupon-card-date">' + sentDate + '</div>';
+                var colorClass = colorThemes[index % colorThemes.length];
+                
+                html += '<div class="coupon-card ' + colorClass + '">';
+                html += '<div class="coupon-card-top">';
+                html += '<div class="coupon-stripes"></div>';
+                html += '<div class="coupon-header">this coupon is good for</div>';
+                html += '<div class="coupon-reward">' + coupon.rewardIcon + ' ' + coupon.rewardName + '</div>';
+                html += '<div class="coupon-subtitle">REDEEM ANYTIME!</div>';
+                html += '</div>';
+                html += '<div class="coupon-card-bottom">';
+                html += '<div class="coupon-child-info">';
+                html += '<span class="coupon-child-avatar">⭐</span>';
+                html += '<div><div class="coupon-child-name">' + coupon.childName + '</div>';
+                html += '<div class="coupon-date">' + sentDate + '</div></div>';
                 html += '</div>';
                 html += '<button class="redeem-btn" onclick="redeemCoupon(' + index + ')">✅ Redeem</button>';
+                html += '</div>';
                 html += '</div>';
             });
             couponList.innerHTML = html;
