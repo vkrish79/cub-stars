@@ -555,7 +555,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -950,23 +950,45 @@
             });
         }
         
-        function printRewardCoupon(coupon) {
-            // Populate coupon
+        var currentCouponToSend = null;
+        
+        function showCouponPreview(coupon) {
+            currentCouponToSend = coupon;
             document.getElementById('couponIcon').textContent = coupon.rewardIcon;
             document.getElementById('couponReward').textContent = coupon.rewardName;
             document.getElementById('couponName').textContent = childData.name;
             document.getElementById('couponDate').textContent = 'Earned: ' + new Date(coupon.redeemedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('couponId').textContent = coupon.id;
-            
-            // Show coupon and print
             document.getElementById('couponPrint').style.display = 'block';
-            
-            setTimeout(function() {
-                window.print();
-                setTimeout(function() {
-                    document.getElementById('couponPrint').style.display = 'none';
-                }, 500);
-            }, 100);
+        }
+        
+        function closeCouponPreview() {
+            document.getElementById('couponPrint').style.display = 'none';
+            currentCouponToSend = null;
+        }
+        
+        function sendCouponToParent() {
+            if (!currentCouponToSend) return;
+            var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
+            var couponToSend = {
+                id: currentCouponToSend.id,
+                rewardName: currentCouponToSend.rewardName,
+                rewardIcon: currentCouponToSend.rewardIcon,
+                redeemedAt: currentCouponToSend.redeemedAt,
+                childName: childData.name,
+                childId: CHILD_ID,
+                sentAt: new Date().toISOString()
+            };
+            pendingCoupons.push(couponToSend);
+            localStorage.setItem('cubstars_pending_coupons', JSON.stringify(pendingCoupons));
+            childData.redeemedRewards = childData.redeemedRewards.filter(function(r) {
+                return r.id !== currentCouponToSend.id;
+            });
+            saveData();
+            closeCouponPreview();
+            playSound('complete');
+            showToast('📨 Coupon sent to parent!', 'success');
+            renderRewards();
         }
 
         // ========== TASK SUBMISSION MODAL ==========
