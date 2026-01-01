@@ -528,7 +528,7 @@
     </div>
     
     <!-- Coupon Send Template -->
-    <div id="couponPrint" class="coupon-container" onclick="if(event.target === this) closeCouponPreview()">
+    <div id="couponPrint" class="coupon-container">
         <div class="coupon">
             <div class="coupon-border">
                 <div class="coupon-header">🎉 CUB STARS REWARD COUPON 🎉</div>
@@ -540,9 +540,9 @@
                 <div class="coupon-date" id="couponDate">Valid: January 1, 2026</div>
                 <div class="coupon-id" id="couponId">CUB-XXXXX</div>
                 <div class="coupon-footer">✂️ - - - - - - - - - - - - - - - - - - - - - - - - - - - ✂️</div>
-                <button id="sendCouponBtn" class="send-coupon-btn" onclick="sendCouponToParent()">📨 Send to Parent</button>
-                <button class="close-coupon-btn" onclick="closeCouponPreview()">✖ Cancel</button>
             </div>
+            <button id="sendCouponBtn" class="send-coupon-btn">📨 Send to Parent</button>
+            <button id="closeCouponBtn" class="close-coupon-btn">✖ Cancel</button>
         </div>
     </div>
     <!-- Loading Indicator -->
@@ -555,7 +555,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -951,6 +951,18 @@
         }
         
         var currentCouponToSend = null;
+        
+        // Set up coupon button listeners
+        document.getElementById('sendCouponBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            sendCouponToParent();
+        });
+        document.getElementById('closeCouponBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeCouponPreview();
+        });
         
         function showCouponPreview(coupon) {
             currentCouponToSend = coupon;
