@@ -623,9 +623,22 @@
         }
 
         function renderCoupons() {
-            var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
             var couponList = document.getElementById('couponList');
             var couponCount = document.getElementById('couponCount');
+            
+            // Collect all coupons from children data (loaded from API)
+            var pendingCoupons = [];
+            if (data && data.children) {
+                data.children.forEach(function(child) {
+                    if (child.sentCoupons && child.sentCoupons.length > 0) {
+                        child.sentCoupons.forEach(function(coupon) {
+                            coupon.childName = child.name;
+                            coupon.childId = child.id;
+                            pendingCoupons.push(coupon);
+                        });
+                    }
+                });
+            }
             
             // Color themes that rotate
             var colorThemes = ['coupon-teal', 'coupon-pink', 'coupon-blue', 'coupon-yellow', 'coupon-green', 'coupon-purple'];
@@ -640,14 +653,14 @@
             
             var html = '';
             pendingCoupons.forEach(function(coupon, index) {
-                var sentDate = new Date(coupon.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                var sentDate = coupon.sentAt ? new Date(coupon.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today';
                 var colorClass = colorThemes[index % colorThemes.length];
                 
                 html += '<div class="coupon-card ' + colorClass + '">';
                 html += '<div class="coupon-card-top">';
                 html += '<div class="coupon-stripes"></div>';
                 html += '<div class="coupon-header">this coupon is good for</div>';
-                html += '<div class="coupon-reward">' + coupon.rewardIcon + ' ' + coupon.rewardName + '</div>';
+                html += '<div class="coupon-reward">' + (coupon.rewardIcon || '🎁') + ' ' + coupon.rewardName + '</div>';
                 html += '<div class="coupon-subtitle">REDEEM ANYTIME!</div>';
                 html += '</div>';
                 html += '<div class="coupon-card-bottom">';
@@ -656,44 +669,58 @@
                 html += '<div><div class="coupon-child-name">' + coupon.childName + '</div>';
                 html += '<div class="coupon-date">' + sentDate + '</div></div>';
                 html += '</div>';
-                html += '<button class="redeem-btn" onclick="redeemCoupon(' + index + ')">✅ Redeem</button>';
+                html += '<button class="redeem-btn" onclick="redeemCoupon(\'' + coupon.id + '\', \'' + coupon.childId + '\')">✅ Redeem</button>';
                 html += '</div>';
                 html += '</div>';
             });
             couponList.innerHTML = html;
         }
         
-        function redeemCoupon(index) {
-            var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
-            if (index >= 0 && index < pendingCoupons.length) {
-                var coupon = pendingCoupons[index];
-                pendingCoupons.splice(index, 1);
-                localStorage.setItem('cubstars_pending_coupons', JSON.stringify(pendingCoupons));
-                showToast('✅ ' + coupon.rewardName + ' redeemed for ' + coupon.childName + '!', 'success');
-                renderCoupons();
-            }
+        function redeemCoupon(couponId, childId) {
+            apiCall('redeemCoupon', { coupon: { couponId: couponId, childId: childId } })
+                .then(function() {
+                    showToast('✅ Coupon redeemed!', 'success');
+                    loadData(true);
+                })
+                .catch(function(err) {
+                    showToast('Error: ' + err.message, 'error');
+                });
         }
         
-        // Test function - call addTestCoupon() in browser console to test coupon display
+        // Test function - adds a test coupon via API
         function addTestCoupon() {
-            var testCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
-            testCoupons.push({
-                id: 'TEST-' + Date.now(),
-                rewardName: 'Movie Night',
-                rewardIcon: '🎬',
-                childName: 'Test Child',
-                sentAt: new Date().toISOString()
+            var testChildId = selectedChildId || (data.children && data.children[0] ? data.children[0].id : 'boy1');
+            apiCall('sendCoupon', { 
+                coupon: {
+                    id: 'TEST-' + Date.now(),
+                    rewardName: 'Movie Night',
+                    rewardIcon: '🎬',
+                    childId: testChildId
+                }
+            }).then(function() {
+                showToast('Test coupon added!', 'success');
+                loadData(true);
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
             });
-            localStorage.setItem('cubstars_pending_coupons', JSON.stringify(testCoupons));
-            renderCoupons();
-            showToast('Test coupon added!', 'success');
         }
         
-        // Clear all test coupons
+        // Clear all coupons for selected child
         function clearTestCoupons() {
-            localStorage.removeItem('cubstars_pending_coupons');
-            renderCoupons();
-            showToast('Coupons cleared!', 'success');
+            if (data && data.children) {
+                var promises = [];
+                data.children.forEach(function(child) {
+                    if (child.sentCoupons) {
+                        child.sentCoupons.forEach(function(coupon) {
+                            promises.push(apiCall('redeemCoupon', { coupon: { couponId: coupon.id, childId: child.id } }));
+                        });
+                    }
+                });
+                Promise.all(promises).then(function() {
+                    showToast('All coupons cleared!', 'success');
+                    loadData(true);
+                });
+            }
         }
         
         function renderTasks() {
