@@ -349,15 +349,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: white;
+            background: rgba(0,0,0,0.7);
             z-index: 10000;
             padding: 20px;
             box-sizing: border-box;
+            overflow-y: auto;
         }
         .coupon {
             max-width: 500px;
-            margin: 0 auto;
+            margin: 20px auto;
             font-family: 'Nunito', Arial, sans-serif;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            padding-bottom: 25px;
         }
         .coupon-border {
             border: 4px dashed #FFD700;
@@ -555,7 +560,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
