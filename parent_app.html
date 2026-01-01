@@ -296,6 +296,38 @@
             </div>
         </div>
         <div class="tab-panel" id="settingsPanel">
+            <!-- Push Notifications Card -->
+            <div class="card">
+                <h2 class="card-title">🔔 Push Notifications</h2>
+                <p style="color: #666; margin-bottom: 15px;">Get notified when your kids complete tasks!</p>
+                
+                <div id="notificationStatus" style="padding: 15px; border-radius: 10px; margin-bottom: 15px; background: #f5f5f5;">
+                    <span id="notifStatusText">Checking notification support...</span>
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button id="enableNotifBtn" class="btn btn-primary" onclick="enableNotifications()" style="display:none;">
+                        🔔 Enable Notifications
+                    </button>
+                    <button id="testNotifBtn" class="btn" onclick="testNotification()" style="display:none; background: #9C27B0; color: white;">
+                        📲 Send Test
+                    </button>
+                    <button id="disableNotifBtn" class="btn btn-danger" onclick="disableNotifications()" style="display:none;">
+                        🔕 Disable
+                    </button>
+                </div>
+                
+                <div id="notifFrequency" style="margin-top: 15px; display: none;">
+                    <label style="font-weight: 500;">Check for updates every:</label>
+                    <select id="pollInterval" onchange="updatePollInterval()" style="padding: 8px; border-radius: 8px; margin-left: 10px;">
+                        <option value="30000">30 seconds</option>
+                        <option value="60000" selected>1 minute</option>
+                        <option value="300000">5 minutes</option>
+                        <option value="600000">10 minutes</option>
+                    </select>
+                </div>
+            </div>
+            
             <div class="card">
                 <h2 class="card-title">⚙️ Reset Progress for <span id="settingsChildName">Select Child</span></h2>
                 <p style="color: #666; margin-bottom: 20px;">Reset specific progress items for the selected child. This cannot be undone!</p>
@@ -829,6 +861,224 @@
         }
 
         loadData();
+        initNotifications();
+        
+        // ========== PUSH NOTIFICATIONS ==========
+        var swRegistration = null;
+        var notifPollInterval = null;
+        var lastPendingCount = 0;
+        
+        function initNotifications() {
+            var statusEl = document.getElementById('notifStatusText');
+            var statusBox = document.getElementById('notificationStatus');
+            var enableBtn = document.getElementById('enableNotifBtn');
+            var testBtn = document.getElementById('testNotifBtn');
+            var disableBtn = document.getElementById('disableNotifBtn');
+            var freqDiv = document.getElementById('notifFrequency');
+            
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                statusEl.textContent = '❌ Notifications not supported in this browser';
+                statusBox.style.background = '#FFEBEE';
+                return;
+            }
+            
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./parent_sw.js')
+                    .then(function(reg) {
+                        swRegistration = reg;
+                        console.log('Service Worker registered');
+                        updateNotificationUI();
+                    })
+                    .catch(function(err) {
+                        console.error('Service Worker registration failed:', err);
+                        statusEl.textContent = '⚠️ Service Worker failed to register';
+                        statusBox.style.background = '#FFF3CD';
+                    });
+            } else {
+                statusEl.textContent = '❌ Service Workers not supported';
+                statusBox.style.background = '#FFEBEE';
+            }
+        }
+        
+        function updateNotificationUI() {
+            var statusEl = document.getElementById('notifStatusText');
+            var statusBox = document.getElementById('notificationStatus');
+            var enableBtn = document.getElementById('enableNotifBtn');
+            var testBtn = document.getElementById('testNotifBtn');
+            var disableBtn = document.getElementById('disableNotifBtn');
+            var freqDiv = document.getElementById('notifFrequency');
+            
+            var permission = Notification.permission;
+            
+            if (permission === 'granted') {
+                statusEl.textContent = '✅ Notifications are enabled!';
+                statusBox.style.background = '#E8F5E9';
+                enableBtn.style.display = 'none';
+                testBtn.style.display = 'inline-block';
+                disableBtn.style.display = 'inline-block';
+                freqDiv.style.display = 'block';
+                startPolling();
+            } else if (permission === 'denied') {
+                statusEl.textContent = '🚫 Notifications blocked. Please enable in browser settings.';
+                statusBox.style.background = '#FFEBEE';
+                enableBtn.style.display = 'none';
+                testBtn.style.display = 'none';
+                disableBtn.style.display = 'none';
+            } else {
+                statusEl.textContent = '🔔 Enable notifications to get alerts when kids complete tasks';
+                statusBox.style.background = '#E3F2FD';
+                enableBtn.style.display = 'inline-block';
+                testBtn.style.display = 'none';
+                disableBtn.style.display = 'none';
+            }
+        }
+        
+        function enableNotifications() {
+            Notification.requestPermission().then(function(permission) {
+                updateNotificationUI();
+                if (permission === 'granted') {
+                    showToast('🔔 Notifications enabled!', 'success');
+                    // Store API URL for service worker
+                    storeApiUrlForSW();
+                }
+            });
+        }
+        
+        function disableNotifications() {
+            stopPolling();
+            showToast('🔕 Notifications paused', 'success');
+            document.getElementById('notifStatusText').textContent = '⏸️ Notifications paused (refresh to re-enable)';
+            document.getElementById('notificationStatus').style.background = '#FFF3CD';
+            document.getElementById('testNotifBtn').style.display = 'none';
+            document.getElementById('disableNotifBtn').style.display = 'none';
+        }
+        
+        function testNotification() {
+            if (swRegistration) {
+                swRegistration.showNotification('🌟 Cub Stars Test', {
+                    body: 'Notifications are working! You\'ll be notified when kids complete tasks.',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⭐</text></svg>',
+                    tag: 'test-notification',
+                    requireInteraction: false
+                });
+                showToast('📲 Test notification sent!', 'success');
+            } else {
+                // Fallback to regular notification
+                new Notification('🌟 Cub Stars Test', {
+                    body: 'Notifications are working!'
+                });
+            }
+        }
+        
+        function storeApiUrlForSW() {
+            var request = indexedDB.open('cubstars-parent', 1);
+            request.onupgradeneeded = function(e) {
+                e.target.result.createObjectStore('settings');
+            };
+            request.onsuccess = function(e) {
+                var db = e.target.result;
+                var tx = db.transaction('settings', 'readwrite');
+                var store = tx.objectStore('settings');
+                store.put(API_URL, 'apiUrl');
+            };
+        }
+        
+        function startPolling() {
+            if (notifPollInterval) clearInterval(notifPollInterval);
+            var interval = parseInt(document.getElementById('pollInterval').value) || 60000;
+            notifPollInterval = setInterval(checkForNewApprovals, interval);
+            // Also check immediately
+            setTimeout(checkForNewApprovals, 5000);
+        }
+        
+        function stopPolling() {
+            if (notifPollInterval) {
+                clearInterval(notifPollInterval);
+                notifPollInterval = null;
+            }
+        }
+        
+        function updatePollInterval() {
+            startPolling();
+            showToast('⏱️ Update interval changed', 'success');
+        }
+        
+        function checkForNewApprovals() {
+            if (!data || !data.children) return;
+            
+            var pendingCount = 0;
+            var pendingTasks = [];
+            var pendingRewardClaims = [];
+            
+            data.children.forEach(function(child) {
+                if (child.pendingApprovals && child.pendingApprovals.length > 0) {
+                    child.pendingApprovals.forEach(function(approval) {
+                        pendingCount++;
+                        pendingTasks.push({ childName: child.name, taskName: approval.taskName });
+                    });
+                }
+                if (child.pendingRewardClaims && child.pendingRewardClaims.length > 0) {
+                    child.pendingRewardClaims.forEach(function(claim) {
+                        pendingCount++;
+                        pendingRewardClaims.push({ childName: child.name, rewardName: claim.rewardName });
+                    });
+                }
+            });
+            
+            // Check for coupons too
+            var coupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
+            
+            var totalPending = pendingCount + coupons.length;
+            
+            // Only notify if count increased
+            if (totalPending > lastPendingCount && lastPendingCount >= 0) {
+                var newItems = totalPending - lastPendingCount;
+                
+                if (document.hidden && Notification.permission === 'granted') {
+                    var title = '📋 ' + newItems + ' New Item' + (newItems > 1 ? 's' : '') + '!';
+                    var body = '';
+                    
+                    if (pendingTasks.length > 0) {
+                        body += pendingTasks.slice(0, 2).map(function(t) { return t.childName + ' completed ' + t.taskName; }).join('. ');
+                    }
+                    if (pendingRewardClaims.length > 0) {
+                        if (body) body += '. ';
+                        body += pendingRewardClaims.slice(0, 2).map(function(r) { return r.childName + ' wants ' + r.rewardName; }).join('. ');
+                    }
+                    if (coupons.length > 0 && coupons.length > (lastPendingCount - pendingCount)) {
+                        if (body) body += '. ';
+                        body += 'New coupon to redeem!';
+                    }
+                    
+                    if (swRegistration) {
+                        swRegistration.showNotification(title, {
+                            body: body || 'Check the app for details',
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">✅</text></svg>',
+                            tag: 'pending-approval-' + Date.now(),
+                            requireInteraction: true,
+                            actions: [{ action: 'open', title: '📱 Review' }]
+                        });
+                    }
+                }
+            }
+            
+            lastPendingCount = totalPending;
+        }
+        
+        // Update lastPendingCount when data loads
+        var originalLoadData = loadData;
+        loadData = function(force) {
+            originalLoadData.call(this, force);
+        };
+        
+        // Listen for visibility change to check on return
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                loadData(true);
+            }
+        });
     </script>
 </body>
 </html>

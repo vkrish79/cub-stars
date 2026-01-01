@@ -443,15 +443,18 @@
         .avatar-circle { width: 80px; height: 80px; background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 4px solid white; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transition: transform 0.3s; }
         .avatar-circle:hover { transform: scale(1.1); }
         .avatar-edit { position: absolute; bottom: 0; right: 0; background: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        .avatar-modal { max-width: 350px; }
-        .avatar-modal h2 { text-align: center; margin-bottom: 20px; }
-        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .avatar-option { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; border: 3px solid #ddd; transition: all 0.2s; background: white; }
+        .avatar-modal { max-width: 350px; max-height: 80vh; overflow-y: auto; }
+        .avatar-modal h2 { text-align: center; margin-bottom: 20px; color: #333; }
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; padding: 10px; }
+        .avatar-option { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; cursor: pointer; border: 3px solid #ddd; transition: all 0.2s; background: white; }
         .avatar-option:hover { transform: scale(1.1); border-color: var(--spidey-red); }
-        .avatar-option.selected { border-color: #FFD700; box-shadow: 0 0 15px rgba(255,215,0,0.5); }
-        .avatar-option.locked { opacity: 0.4; cursor: not-allowed; position: relative; }
-        .avatar-option.locked::after { content: '🔒'; position: absolute; font-size: 0.8rem; }
-        .modal-close-btn { display: block; width: 100%; padding: 12px; background: #666; color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; }
+        .avatar-option.selected { border-color: #FFD700; box-shadow: 0 0 15px rgba(255,215,0,0.5); background: #FFF9E6; }
+        .avatar-option.locked { opacity: 0.6; cursor: pointer; position: relative; background: #f5f5f5; }
+        .avatar-option.locked::after { content: '🔒'; position: absolute; font-size: 0.7rem; bottom: -2px; right: -2px; background: white; border-radius: 50%; padding: 2px; }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal.hidden { display: none; }
+        .modal-content { background: white; border-radius: 20px; padding: 25px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal-close-btn { display: block; width: 100%; padding: 12px; background: #666; color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; margin-top: 10px; }
         
         /* Celebration Animations */
         @keyframes float-up { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-200px) scale(1.5); opacity: 0; } }
