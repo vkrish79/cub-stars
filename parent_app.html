@@ -229,6 +229,12 @@
         </div>
         <div class="child-selector" id="childSelector"></div>
         <div class="tab-panel active" id="approvalsPanel">
+            <!-- COUPONS SECTION - FIRST FOR VISIBILITY -->
+            <div class="card" style="border: 3px solid #FFD700; background: linear-gradient(135deg, #FFFBF0 0%, #FFF9E6 100%);">
+                <h2 class="card-title" style="color: #B8860B; font-size: 1.2rem;">🎟️ Coupons to Redeem <span class="notification-badge" id="couponCount" style="background:#FFD700;color:#333;">0</span></h2>
+                <div id="couponList"><div class="empty-state"><div class="emoji">🎟️</div><p>No coupons waiting!</p></div></div>
+            </div>
+            
             <div class="card">
                 <h2 class="card-title">📋 Pending Task Approvals</h2>
                 <div class="approval-list" id="approvalList"><div class="empty-state"><div class="emoji">✨</div><p>No pending task approvals!</p></div></div>
@@ -236,10 +242,6 @@
             <div class="card">
                 <h2 class="card-title">🎁 Pending Reward Claims</h2>
                 <div class="approval-list" id="rewardClaimList"><div class="empty-state"><div class="emoji">🎁</div><p>No pending reward claims!</p></div></div>
-            </div>
-            <div class="card">
-                <h2 class="card-title">🎟️ Coupons to Redeem <span class="notification-badge" id="couponCount" style="background:#FFD700;color:#333;">0</span></h2>
-                <div class="approval-list" id="couponList"><div class="empty-state"><div class="emoji">🎟️</div><p>No coupons waiting!</p></div></div>
             </div>
         </div>
         <div class="tab-panel" id="managePanel">
@@ -329,6 +331,16 @@
             </div>
         </div>
         <div class="tab-panel" id="settingsPanel">
+            <!-- Test Coupon Card - For debugging -->
+            <div class="card" style="border: 2px dashed #FFD700; background: #FFFBF0;">
+                <h2 class="card-title" style="color: #B8860B;">🧪 Test Coupons</h2>
+                <p style="color: #666; margin-bottom: 15px;">Add test coupons to verify the display is working.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="addTestCoupon()">➕ Add Test Coupon</button>
+                    <button class="btn btn-danger" onclick="clearTestCoupons()">🗑️ Clear All Coupons</button>
+                </div>
+            </div>
+            
             <!-- Push Notifications Card -->
             <div class="card">
                 <h2 class="card-title">🔔 Push Notifications</h2>
@@ -660,6 +672,28 @@
                 showToast('✅ ' + coupon.rewardName + ' redeemed for ' + coupon.childName + '!', 'success');
                 renderCoupons();
             }
+        }
+        
+        // Test function - call addTestCoupon() in browser console to test coupon display
+        function addTestCoupon() {
+            var testCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
+            testCoupons.push({
+                id: 'TEST-' + Date.now(),
+                rewardName: 'Movie Night',
+                rewardIcon: '🎬',
+                childName: 'Test Child',
+                sentAt: new Date().toISOString()
+            });
+            localStorage.setItem('cubstars_pending_coupons', JSON.stringify(testCoupons));
+            renderCoupons();
+            showToast('Test coupon added!', 'success');
+        }
+        
+        // Clear all test coupons
+        function clearTestCoupons() {
+            localStorage.removeItem('cubstars_pending_coupons');
+            renderCoupons();
+            showToast('Coupons cleared!', 'success');
         }
         
         function renderTasks() {
