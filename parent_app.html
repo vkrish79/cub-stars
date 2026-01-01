@@ -122,6 +122,10 @@
                 <h2 class="card-title">🎁 Pending Reward Claims</h2>
                 <div class="approval-list" id="rewardClaimList"><div class="empty-state"><div class="emoji">🎁</div><p>No pending reward claims!</p></div></div>
             </div>
+            <div class="card">
+                <h2 class="card-title">🎟️ Coupons to Redeem <span class="notification-badge" id="couponCount" style="background:#FFD700;color:#333;">0</span></h2>
+                <div class="approval-list" id="couponList"><div class="empty-state"><div class="emoji">🎟️</div><p>No coupons waiting!</p></div></div>
+            </div>
         </div>
         <div class="tab-panel" id="managePanel">
             <div class="card">
@@ -213,7 +217,7 @@
     <div class="toast" id="toast"></div>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CACHE_KEY = 'cubstars_parent_cache';
@@ -418,6 +422,47 @@
             document.body.appendChild(overlay);
         }
 
+        function renderCoupons() {
+            var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
+            var couponList = document.getElementById('couponList');
+            var couponCount = document.getElementById('couponCount');
+            
+            couponCount.textContent = pendingCoupons.length;
+            couponCount.style.display = pendingCoupons.length > 0 ? 'inline-block' : 'none';
+            
+            if (pendingCoupons.length === 0) {
+                couponList.innerHTML = '<div class="empty-state"><div class="emoji">🎟️</div><p>No coupons waiting!</p></div>';
+                return;
+            }
+            
+            var html = '';
+            pendingCoupons.forEach(function(coupon, index) {
+                var sentDate = new Date(coupon.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                html += '<div class="coupon-card">';
+                html += '<div class="coupon-card-header">';
+                html += '<div class="coupon-card-reward">' + coupon.rewardIcon + ' ' + coupon.rewardName + '</div>';
+                html += '</div>';
+                html += '<div class="coupon-card-child">From: ' + coupon.childName + ' • Sent: ' + sentDate + '</div>';
+                html += '<div class="coupon-card-id">' + coupon.id + '</div>';
+                html += '<div class="coupon-card-actions">';
+                html += '<button class="redeem-btn" onclick="redeemCoupon(' + index + ')">✅ Mark as Redeemed</button>';
+                html += '</div>';
+                html += '</div>';
+            });
+            couponList.innerHTML = html;
+        }
+        
+        function redeemCoupon(index) {
+            var pendingCoupons = JSON.parse(localStorage.getItem('cubstars_pending_coupons') || '[]');
+            if (index >= 0 && index < pendingCoupons.length) {
+                var coupon = pendingCoupons[index];
+                pendingCoupons.splice(index, 1);
+                localStorage.setItem('cubstars_pending_coupons', JSON.stringify(pendingCoupons));
+                showToast('✅ ' + coupon.rewardName + ' redeemed for ' + coupon.childName + '!', 'success');
+                renderCoupons();
+            }
+        }
+        
         function renderTasks() {
             var child = data.children.find(function(c) { return c.id === selectedChildId; });
             document.getElementById('taskChildName').textContent = child ? child.name : 'Select Child';

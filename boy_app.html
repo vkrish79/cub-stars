@@ -315,6 +315,33 @@
         }
         
         /* Coupon Styles */
+        .send-coupon-btn {
+            display: block;
+            width: 80%;
+            margin: 15px auto 10px;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+        }
+        .send-coupon-btn:active { transform: scale(0.95); }
+        .close-coupon-btn {
+            display: block;
+            width: 60%;
+            margin: 5px auto 15px;
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background: #666;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
         .coupon-container {
             display: none;
             position: fixed;
@@ -403,6 +430,7 @@
             }
             .coupon { max-width: 100%; }
             .coupon-border { border-width: 3px; }
+            .send-coupon-btn, .close-coupon-btn { display: none !important; }
         }
     </style>
 </head>
@@ -499,8 +527,8 @@
         </div>
     </div>
     
-    <!-- Coupon Print Template -->
-    <div id="couponPrint" class="coupon-container">
+    <!-- Coupon Send Template -->
+    <div id="couponPrint" class="coupon-container" onclick="if(event.target === this) closeCouponPreview()">
         <div class="coupon">
             <div class="coupon-border">
                 <div class="coupon-header">🎉 CUB STARS REWARD COUPON 🎉</div>
@@ -512,6 +540,8 @@
                 <div class="coupon-date" id="couponDate">Valid: January 1, 2026</div>
                 <div class="coupon-id" id="couponId">CUB-XXXXX</div>
                 <div class="coupon-footer">✂️ - - - - - - - - - - - - - - - - - - - - - - - - - - - ✂️</div>
+                <button id="sendCouponBtn" class="send-coupon-btn" onclick="sendCouponToParent()">📨 Send to Parent</button>
+                <button class="close-coupon-btn" onclick="closeCouponPreview()">✖ Cancel</button>
             </div>
         </div>
     </div>
@@ -525,7 +555,7 @@
     <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
     <script>
         // ⚠️ CONFIGURATION - Set your Google Apps Script URL here:
-        var API_URL = 'https://script.google.com/macros/s/AKfycbx_vl_qhbYnbH5TcYOGMepizK1lpidTFKx22oUV28GxFXqvt7xCAH1o6xbKR3HvJriH/exec';
+        var API_URL = '{{SCRIPT_URL}}';
         // Example: var API_URL = 'https://script.google.com/macros/s/ABC123.../exec';
         
         var CHILD_ID = 'boy1';
@@ -895,7 +925,7 @@
                 });
                 
                 var cardClass = redeemedCoupon ? 'redeemed' : isPending ? 'pending-claim' : canAfford ? 'affordable' : '';
-                var btnText = redeemedCoupon ? '🎟️ Print Coupon' : isPending ? '⏳ Waiting...' : canAfford ? 'CLAIM! 💥' : 'Need ' + (reward.cost - childData.stars) + ' more';
+                var btnText = redeemedCoupon ? '📨 Send Coupon' : isPending ? '⏳ Waiting...' : canAfford ? 'CLAIM! 💥' : 'Need ' + (reward.cost - childData.stars) + ' more';
                 
                 var div = document.createElement('div');
                 div.className = 'reward-card ' + cardClass;
@@ -905,7 +935,7 @@
                 btn.textContent = btnText;
                 
                 if (redeemedCoupon) {
-                    btn.onclick = function() { printRewardCoupon(redeemedCoupon); };
+                    btn.onclick = function() { showCouponPreview(redeemedCoupon); };
                 } else if (!isPending && canAfford) {
                     btn.onclick = function() { claimReward(reward.id, reward.name, reward.icon); };
                 } else {
